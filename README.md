@@ -81,10 +81,14 @@ BgRunner (в работе)| running queue        |переключаемся н�
 
 #TODO
 
-1. scheduler per core running Tasks queue
+0. Lock-Free засыпание и активация рабочих потоков с помощью futex (в винде уже тоже есть)
+1. нужно убрать зависимость от boost, перенеся нужные файлы boost::context в этот проект
+(для начала собирать только библиотеку под Linux). Нужны будут asm файлы и заголовочный файл
+1. scheduler per core running Tasks queue (use hwloc)
 3. class Future to wait for data ready
 4. Unit Tests
-5. Asyncronous Networking (DNS resolver, sockets)
+5. Asyncronous Networking (DNS resolver (этот будет асинхронным только каждый в своем потоке),
+sockets)
 
 #License
 
