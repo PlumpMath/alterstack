@@ -9,7 +9,7 @@
 
 #include <cstdint>
 
-namespace switch_context
+namespace scontext
 {
 
 typedef void*   fcontext_t;
