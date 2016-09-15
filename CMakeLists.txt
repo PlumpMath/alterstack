@@ -44,7 +44,7 @@ endif()
 #pkg_check_modules(TCMALLOC REQUIRED libtcmalloc_minimal)
 #include_directories(${TCMALLOC_INCLUDE_DIRS})
 #set(LIBS ${LIBS} ${TCMALLOC_LIBRARIES})
-set(COMMON_LIBS ${COMMON_LIBS} -ltcmalloc_minimal -latomic)
+set(COMMON_LIBS ${COMMON_LIBS} -ljemalloc -latomic)
 
 #set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # Instruct CMake to run moc automatically when needed.
