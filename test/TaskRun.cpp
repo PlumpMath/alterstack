@@ -44,7 +44,7 @@ void ctx_arg1(int data)
 int main()
 {
     Task task;
-    task.run(ctx_function);
+    task.run( ctx_function );
     Task task2;
     int x = 11;
     task2.run([x]{std::cout << "Hello from lambda: x = " << x << "\n";});

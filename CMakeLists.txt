@@ -34,11 +34,8 @@ set(Boost_USE_STATIC_LIBS        ON) # only find static libs
 set(Boost_USE_MULTITHREADED      ON)
 set(Boost_USE_STATIC_RUNTIME    OFF)
 
-find_package(Boost 1.58.0 COMPONENTS context)
-if(NOT Boost_FOUND)
-  include(cmake/AddExternalBoost.cmake)
-endif()
-#include_directories(${Boost_INCLUDE_DIRS})
+add_subdirectory( ext/scontext )
+include_directories( ext/scontext/include )
 
 #find_package(PkgConfig)
 #pkg_check_modules(TCMALLOC REQUIRED libtcmalloc_minimal)
@@ -69,11 +66,11 @@ set(alterstack_SRCS
     src/Task.cpp
 )
 
-add_definitions(-std=c++14 -Wall -pedantic -mtune=native -march=native -pthread)
-#add_definitions(-std=c++14 -Wall -pedantic -mtune=native -march=native -pthread -g -fsanitize=address -fno-omit-frame-pointer)
+add_definitions(-std=c++11 -Wall -pedantic -mtune=native -march=native -pthread)
+#add_definitions(-std=c++11 -Wall -pedantic -mtune=native -march=native -pthread -g -fsanitize=address -fno-omit-frame-pointer)
 
 add_library(alterstack STATIC ${alterstack_SRCS})
-target_link_libraries(alterstack boost_context)
+target_link_libraries(alterstack scontext)
 #target_link_libraries(context ${COMMON_LIBS})
 #target_link_libraries(alterstack ${COMMON_LIBS} ${Boost_LIBRARIES} -pthread)
 #target_link_libraries(cot ${COMMON_LIBS} ${Boost_LIBRARIES} -pthread -g -fsanitize=address)

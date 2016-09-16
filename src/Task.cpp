@@ -28,12 +28,12 @@
 namespace alterstack
 {
 
-namespace ctx = ::boost::context;
+namespace ctx = ::scontext;
 
 Task::Task()
     :m_native_info(nullptr)
     ,m_state(TaskState::Created)
-    ,m_stack(std::make_unique<Stack>())
+    ,m_stack(new Stack())
 {}
 
 Task::Task(AsThreadInfo* native_info)
@@ -62,16 +62,15 @@ Task::~Task()
 
 void Task::set_function() // FIXME: this hack will be fixed with extending runnable types
 {
-    m_context = ctx::make_fcontext(m_stack->stack_top(), m_stack->size(), _run_wrapper);
+    m_context = ctx::make_fcontext( m_stack->stack_top(), m_stack->size(), _run_wrapper);
 }
 
-void Task::run(::std::function<void()> runnable )
+void Task::run( ::std::function<void()> runnable )
 {
     LOG << "Task::run\n";
     if( m_state != TaskState::Created)
-    {
         throw std::logic_error("Task still running");
-    }
+
     m_state = TaskState::Running;
     m_runnable = runnable;
 
@@ -95,13 +94,20 @@ void Task::wait()
     awaitable_.wait();
 }
 
-void Task::_run_wrapper(intptr_t task_ptr) noexcept
+void Task::_run_wrapper( ::scontext::transfer_t transfer ) noexcept
 {
     try
     {
-        Task* old_task = reinterpret_cast<Task*>(task_ptr);
+        // FIXME: check this logic, old context missed
+        // FIXME: use {} to constrain scope, because function will never end
+        Task* old_task = reinterpret_cast<Task*>(transfer.data);
+        if( old_task != nullptr )
+            old_task->m_context = transfer.fctx;
         Scheduler::post_switch_fixup(old_task);
-        LOG << "Task::_run_wrapper: started\n";
+        LOG << "Task::_run_wrapper: started\n"
+            << "old_task, context " << old_task;
+        if( old_task != nullptr )
+            LOG << " " << old_task->m_context << "\n";
 
         Task* current = Scheduler::get_current_task();
         current->m_runnable();
@@ -118,7 +124,7 @@ void Task::_run_wrapper(intptr_t task_ptr) noexcept
         }
         current->m_state = TaskState::Created;
         assert(next_task != nullptr);
-        Scheduler::switch_to(next_task,TaskState::Finished); // exactly Finished
+        Scheduler::switch_to(next_task, TaskState::Finished); // exactly Finished
 
         // This line is unreachable,
         // because current context will never scheduled

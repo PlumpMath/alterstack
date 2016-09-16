@@ -39,7 +39,7 @@ BgRunner::BgRunner(
     LOG << "BgRunner::BgRunner()\n";
     for(uint32_t i = 0; i < min_spare; ++i)
     {
-        m_cpu_core_list.push_back(::std::make_unique<CpuCore>(scheduler));
+        m_cpu_core_list.push_back(::std::unique_ptr<CpuCore>(new CpuCore(scheduler)));
     }
 }
 

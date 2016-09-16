@@ -19,11 +19,11 @@
 
 #pragma once
 
-#include <boost/context/all.hpp>
+#include <scontext.hpp>
 
 namespace alterstack
 {
 
-using Context = ::boost::context::fcontext_t;
+using Context = ::scontext::fcontext_t;
 
 }

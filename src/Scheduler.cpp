@@ -31,7 +31,7 @@
 namespace alterstack
 {
 
-namespace ctx = ::boost::context;
+namespace ctx = ::scontext;
 
 Scheduler::Scheduler()
     :bg_runner_(this)
@@ -81,50 +81,74 @@ void Scheduler::switch_to(Task* new_task, TaskState old_task_state)
     default:
         old_task = nullptr;
     }
+    LOG << "Scheduler::switch_to old_task -> new_task"
+        << old_task << " -> " << new_task << "\n";
     m_thread_info->current_task = new_task;
-    while( new_task->m_context == nullptr )
-    {
-        ::std::this_thread::yield();
-    }
+//    do not remember, why is this here
+//    while( new_task->m_context == nullptr )
+//    {
+//        ::std::this_thread::yield();
+//    }
     Task* prev_task;
     switch( old_task_state )
     {
     case TaskState::Running:
-        prev_task = (Task*)::boost::context::jump_fcontext(
-                    &old_task->m_context
-                    ,new_task->m_context
-                    ,(intptr_t)old_task);
+    { // FIXME: check logick for this method
+        ::scontext::transfer_t transfer = ::scontext::jump_fcontext(
+                    new_task->m_context
+                    ,(void*)old_task);
+        // as result for previous switch some new contexts will work
+        // and after that I will come back in this context exactly in
+        // it's state before jump (so old context become current again
+        // And it will be Running as before and because someone switched to us -
+        // no reason to switch to Waiting context)
+        // Here exist 3 contexts:
+        // old - is context I switching from
+        // new - is context I switched to
+        // prev - is context I came back from (after new context, and other
+        // did it's work)
+        prev_task = (Task*)transfer.data;
+        if( prev_task != nullptr )
+            prev_task->m_context = transfer.fctx;
         break;
+    }
     case TaskState::Waiting:
-        prev_task = (Task*)::boost::context::jump_fcontext(
-                    &old_task->m_context
-                    ,new_task->m_context
-                    ,(intptr_t)nullptr);
+    {
+        ::scontext::transfer_t transfer = ::scontext::jump_fcontext(
+                    new_task->m_context
+                    ,(void*)nullptr);
+        prev_task = (Task*)transfer.data;
+        if( prev_task != nullptr )
+            prev_task->m_context = transfer.fctx;
         break;
+    }
     default:
-        Context tmp_context;
-        prev_task = (Task*)::boost::context::jump_fcontext(
-                    &tmp_context
-                    ,new_task->m_context
-                    ,(intptr_t)nullptr);
+    {
+        ::scontext::transfer_t transfer = ::scontext::jump_fcontext(
+                    new_task->m_context
+                    ,nullptr);
+        prev_task = (Task*)transfer.data;
+        if( prev_task != nullptr )
+            prev_task->m_context = transfer.fctx;
         break;
+    }
     }
 
     post_switch_fixup(prev_task);
 }
 
-void Scheduler::post_switch_fixup(Task *old_task)
+void Scheduler::post_switch_fixup(Task *prev_task)
 {
     LOG << "Scheduler::post_switch_fixup\n";
-    if( old_task == nullptr )
+    if( prev_task == nullptr )
     {
         LOG << "Scheduler::post_switch_fixup: old_task == nullptr, do nothing\n";
         return;
     }
-    if( !old_task->is_native() ) // AlterNative
+    if( !prev_task->is_native() ) // AlterNative
     {
         LOG << "Scheduler::post_switch_fixup: enqueueing old task\n";
-        enqueue_task(old_task);
+        enqueue_task(prev_task);
     }
 }
 
@@ -132,7 +156,7 @@ Task *Scheduler::get_current_task()
 {
     if( !m_thread_info )
     {
-        m_thread_info = ::std::make_unique<AsThreadInfo>();
+        m_thread_info.reset(new AsThreadInfo());
     }
     if (m_thread_info->current_task == nullptr )
     {
@@ -149,7 +173,7 @@ Task *Scheduler::get_native_task()
 {
     if( !m_thread_info )
     {
-        m_thread_info = ::std::make_unique<AsThreadInfo>();
+        m_thread_info.reset(new AsThreadInfo() );
     }
     if( !m_thread_info->native_task )
     {
@@ -162,11 +186,11 @@ void Scheduler::create_native_task_for_current_thread()
 {
     if( !m_thread_info )
     {
-        m_thread_info = ::std::make_unique<AsThreadInfo>();
+        m_thread_info.reset( new AsThreadInfo() );
     }
     if( !m_thread_info->native_task )
     {
-        m_thread_info->native_task = ::std::make_unique<Task>(m_thread_info.get());
+        m_thread_info->native_task.reset( new Task(m_thread_info.get()) );
         LOG << "make_native_task: created native task " << m_thread_info->native_task.get() << "\n";
     }
 }

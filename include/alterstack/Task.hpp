@@ -106,7 +106,7 @@ private:
      * @brief helper function to start Task's runnable object and clean when it's finished
      * @param task_ptr pointer to Task instance
      */
-    static void _run_wrapper(intptr_t task_ptr) noexcept;
+    static void _run_wrapper( ::scontext::transfer_t transfer ) noexcept;
     bool is_native() noexcept;
 
     Awaitable  awaitable_;
