@@ -59,7 +59,6 @@ add_executable( test_gai_test
     Gai_test.cpp
 )
 target_link_libraries( test_gai_test ${COMMON_LIBS} )
-add_dependencies( test_gai_test EXT_CPU_UTILS )
 
 add_library( catch_main STATIC catch_main.cpp )
 

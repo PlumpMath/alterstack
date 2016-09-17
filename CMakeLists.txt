@@ -1,10 +1,6 @@
 project(alterstack)
 cmake_minimum_required(VERSION 3.1)
 
-include(ExternalProject)
-link_directories(${CMAKE_BINARY_DIR}/InstalledExternals/lib)
-include_directories(${CMAKE_BINARY_DIR}/InstalledExternals/include)
-
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 # this works with only cmake 3.1.0+
@@ -12,10 +8,8 @@ find_package(Threads REQUIRED)
 
 add_subdirectory( ext/scontext )
 include_directories( ext/scontext/include )
-
 include_directories( ext/crash_log/include )
-
-include(cmake/AddExternalCpuUtils.cmake)
+include_directories( ext/cpu_utils/include )
 
 include_directories(include)
 
