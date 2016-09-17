@@ -5,8 +5,6 @@ include(ExternalProject)
 link_directories(${CMAKE_BINARY_DIR}/InstalledExternals/lib)
 include_directories(${CMAKE_BINARY_DIR}/InstalledExternals/include)
 
-set(COMMON_LIBS ${COMMON_LIBS} -ljemalloc -latomic)
-
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 # this works with only cmake 3.1.0+
@@ -35,8 +33,6 @@ add_definitions(-std=c++11 -Wall -pedantic -mtune=native -march=native -pthread)
 
 add_library(alterstack STATIC ${alterstack_SRCS})
 target_link_libraries(alterstack scontext)
-
-include(./cmake/AddExternalCatch.cmake)
 
 enable_testing()
 add_subdirectory(test)
