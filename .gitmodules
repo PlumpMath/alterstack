@@ -1,3 +1,6 @@
 [submodule "ext/scontext"]
 	path = ext/scontext
 	url = https://github.com/masterspline/scontext.git
+[submodule "ext/crash_log"]
+	path = ext/crash_log
+	url = https://github.com/masterspline/crash_log.git

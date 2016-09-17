@@ -13,8 +13,9 @@ find_package(Threads REQUIRED)
 add_subdirectory( ext/scontext )
 include_directories( ext/scontext/include )
 
+include_directories( ext/crash_log/include )
+
 include(cmake/AddExternalCpuUtils.cmake)
-include(cmake/AddExternalCrashLog.cmake)
 
 include_directories(include)
 
