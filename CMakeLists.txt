@@ -29,8 +29,5 @@ add_definitions(-std=c++11 -Wall -pedantic -mtune=native -march=native -pthread)
 add_library(alterstack STATIC ${alterstack_SRCS})
 target_link_libraries(alterstack scontext)
 
-add_executable( futex example/futex.cpp )
-target_link_libraries( futex Threads::Threads )
-
 enable_testing()
 add_subdirectory(test)

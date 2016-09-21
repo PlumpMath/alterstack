@@ -90,3 +90,6 @@ add_executable( load_running_queue
     ./load_test/load_running_queue.cpp
 )
 target_link_libraries( load_running_queue ${COMMON_LIBS} Threads::Threads)
+
+add_executable( load_futex ./load_test/load_futex.cpp )
+target_link_libraries( load_futex Threads::Threads )
