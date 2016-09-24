@@ -6,7 +6,7 @@
    https://github.com/masterspline/scontext.git
    ext/scontext/
 3. crash_log (log using mmap'ed file as temp buffer, which flushed to file
-   when filled. This enshures, that in case of  application crash buffer 
+   when filled. This ensures, that in case of application crash, buffer 
    will be stored on disk by kernel. 
    Also this algorithm fast due to rare file writes)
    https://github.com/masterspline/crash_log.git
