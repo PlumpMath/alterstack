@@ -26,7 +26,7 @@
 
 #include <iostream>
 
-#include "Futex.hpp"
+#include "alterstack/Futex.hpp"
 
 class TestLockFreeQueue
 {
@@ -151,7 +151,25 @@ void consumer_function( Futex& futex, TestLockFreeQueue& queue )
         }
     }
 }
-
+/**
+ * @brief main will load test Futex miplementation
+ *
+ * it starts two threads: one producer and one consumer
+ * Consumer will dequeue "work" from lock free queue and process it. If queue is
+ * empty - consumer will call Futex::wait() to sleep on futex.
+ *
+ * Producer will batch create some "work" in lock free queue and Futex::notify(),
+ * then wait for queue will become empty (trying to catch point when consumer
+ * change from working mode to sleep mode), then enqueue some more work and
+ * call Futex::notify() to wake up consumer. After that it checks that queue will
+ * be processed by consumer (was it sleeping or going to sleep at notify()).
+ * Producer and Consumer is running on different OS threads.
+ *
+ * The aim of this test is to check, that notify will always work (whether consumer waiting()
+ * or not)
+ *
+ * @return 0 on success
+ */
 int main()
 {
     std::cout << "main started\n";
