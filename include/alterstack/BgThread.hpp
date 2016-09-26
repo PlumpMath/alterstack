@@ -31,25 +31,25 @@ class Scheduler;
 /**
  * @brief Single Task background runner thread.
  */
-class CpuCore
+class BgThread
 {
 public:
-    CpuCore(const CpuCore&) = delete;
-    CpuCore(CpuCore&&) = delete;
-    CpuCore& operator=(const CpuCore&) = delete;
-    CpuCore& operator=(CpuCore&&) = delete;
-    CpuCore() = delete;
+    BgThread(const BgThread&) = delete;
+    BgThread(BgThread&&) = delete;
+    BgThread& operator=(const BgThread&) = delete;
+    BgThread& operator=(BgThread&&) = delete;
+    BgThread() = delete;
     /**
      * @brief start one OS thread
      * @param bg_runner reference to BgRunner
      */
-    explicit CpuCore(Scheduler* scheduler);
+    explicit BgThread(Scheduler* scheduler);
     /**
      * @brief destructor stops OS thread, return when it's stopped
      */
-    ~CpuCore();
+    ~BgThread();
     /**
-     * @brief ask this CpuCore to stop
+     * @brief ask this BgThread to stop
      *
      * do not wait for thread stop
      */
@@ -60,7 +60,7 @@ public:
     void stop_thread();
     void wake_up();
     /**
-     * @brief get current waiting CpuCore threads count
+     * @brief get current waiting BgThread threads count
      * @return number of currently sleeping threads
      */
     static uint32_t sleep_count();
@@ -82,25 +82,25 @@ private:
     std::thread       m_thread;         //!< OS thread
     std::atomic<bool> m_thread_started; //!< true if thread_function started
     std::atomic<bool> m_thread_stopped; //!< true if thread_function stopped
-    bool              m_stop_requested; //!< true when current CpuCore need to stop
+    bool              m_stop_requested; //!< true when current BgThread need to stop
     ::std::mutex      m_task_avalable_mutex; //!< mutex to sleep on conditional_variable
     ::std::condition_variable m_task_avalable; //!< conditional_variable to wait on
 
     static ::std::atomic<uint32_t> m_sleep_count;
 };
 
-inline void CpuCore::request_stop()
+inline void BgThread::request_stop()
 {
     ::std::lock_guard<std::mutex> guard(m_task_avalable_mutex);
     m_stop_requested = true;
 }
 
-inline bool CpuCore::is_stop_requested_no_lock()
+inline bool BgThread::is_stop_requested_no_lock()
 {
     return  __builtin_expect( m_stop_requested, false );
 }
 
-inline uint32_t CpuCore::sleep_count()
+inline uint32_t BgThread::sleep_count()
 {
     return m_sleep_count.load(std::memory_order_acquire);
 }

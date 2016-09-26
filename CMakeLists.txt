@@ -18,7 +18,7 @@ set(alterstack_SRCS
     src/Awaitable.cpp
     src/Scheduler.cpp
     src/BgRunner.cpp
-    src/CpuCore.cpp
+    src/BgThread.cpp
     src/Stack.cpp
     src/Task.cpp
 )

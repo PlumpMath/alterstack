@@ -24,7 +24,7 @@
 #include <memory>
 #include <thread>
 
-#include "CpuCore.hpp"
+#include "BgThread.hpp"
 
 namespace alterstack
 {
@@ -40,7 +40,7 @@ public:
      * @brief thread pool constructor
      * @param scheduler Scheduler reference
      * @param min_spare number of threads to start
-     * @param max_running max CpuCore to use
+     * @param max_running max BgThread to use
      */
     explicit BgRunner(
             Scheduler* scheduler
@@ -49,34 +49,34 @@ public:
     ~BgRunner();
 
     /**
-     * @brief set spare CpuCore count
+     * @brief set spare BgThread count
      * @param cores count
      */
     void set_min_cores(uint32_t cores); // not implemented
     /**
-     * @brief set max CpuCore limit
+     * @brief set max BgThread limit
      * @param cores max limit
      */
     void set_max_cores(uint32_t cores); // not implemented
 
 private:
-    friend class CpuCore;
+    friend class BgThread;
     friend class Scheduler;
     /**
-     * @brief wake up all sleeping CpuCore's
+     * @brief wake up all sleeping BgThread's
      */
     void notify_all();
     /**
      * @brief notify BgRunner, that there is more Task s in RunningQueue
      *
-     * If some CpuCore is sleeping, one will be woked up
+     * If some BgThread is sleeping, one will be woked up
      */
     void notify();
 
     Scheduler* scheduler_;   //!< reference to Scheduler
     uint32_t   min_spare_;   //!< min spare threads
-    uint32_t   max_running_; //!< max CpuCore threads limit
-    ::std::deque<std::unique_ptr<CpuCore>> m_cpu_core_list;
+    uint32_t   max_running_; //!< max BgThread threads limit
+    ::std::deque<std::unique_ptr<BgThread>> m_cpu_core_list;
 };
 
 }

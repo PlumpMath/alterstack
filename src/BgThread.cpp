@@ -17,7 +17,7 @@
  * along with Alterstack.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#include "alterstack/CpuCore.hpp"
+#include "alterstack/BgThread.hpp"
 
 #include <sys/prctl.h>
 
@@ -29,26 +29,26 @@
 
 namespace alterstack
 {
-::std::atomic<uint32_t> CpuCore::m_sleep_count;
+::std::atomic<uint32_t> BgThread::m_sleep_count;
 
-void CpuCore::thread_function()
+void BgThread::thread_function()
 {
     m_thread_started.store(true, ::std::memory_order_release);
     AtomicReturnBoolGuard thread_stopped_guard(m_thread_stopped);
     Scheduler::create_native_task_for_current_thread();
     Scheduler::m_thread_info->native_runner = false;
 
-    static const char* name = "CpuCore";
+    static const char* name = "BgThread";
     ::prctl(PR_SET_NAME, reinterpret_cast<unsigned long>(name));
 
-    LOG << "CpuCore::thread_function: started\n";
+    LOG << "BgThread::thread_function: started\n";
 
     while( true )
     {
         Task* next_task = scheduler_->get_next_from_queue();
         if( next_task != nullptr )
         {
-            LOG << "CpuCore::thread_function: got new task, switching on " << next_task << "\n";
+            LOG << "BgThread::thread_function: got new task, switching on " << next_task << "\n";
             scheduler_->switch_to(next_task);
         }
 
@@ -57,9 +57,9 @@ void CpuCore::thread_function()
         {
             return;
         }
-        LOG << "CpuCore::thread_function: waiting...\n";
+        LOG << "BgThread::thread_function: waiting...\n";
         wait_on_cv(task_ready_guard);
-        LOG << "CpuCore::thread_function: waked up\n";
+        LOG << "BgThread::thread_function: waked up\n";
         if( is_stop_requested_no_lock() )
         {
             return;
@@ -68,26 +68,26 @@ void CpuCore::thread_function()
     }
 }
 
-void CpuCore::ensure_thread_started()
+void BgThread::ensure_thread_started()
 {
     while(!m_thread_started.load())
     {
-        LOG << "CpuCore::~CpuCore(): waiting thread_function to start\n";
+        LOG << "BgThread::~BgThread(): waiting thread_function to start\n";
         std::this_thread::yield();
     }
 }
 
-void CpuCore::ensure_thread_stopped()
+void BgThread::ensure_thread_stopped()
 {
     while( !m_thread_stopped.load() )
     {
-        LOG << "CpuCore::~CpuCore(): waiting thread_function to stop\n";
+        LOG << "BgThread::~BgThread(): waiting thread_function to stop\n";
         std::this_thread::sleep_for(::std::chrono::microseconds(1));
         wake_up();
     }
 }
 
-void CpuCore::wait_on_cv(::std::unique_lock<std::mutex>& task_ready_guard)
+void BgThread::wait_on_cv(::std::unique_lock<std::mutex>& task_ready_guard)
 {
     m_sleep_count.fetch_add(1, std::memory_order_relaxed);
     m_task_avalable.wait_for(
@@ -97,24 +97,24 @@ void CpuCore::wait_on_cv(::std::unique_lock<std::mutex>& task_ready_guard)
 
 }
 
-CpuCore::CpuCore(Scheduler *scheduler)
+BgThread::BgThread(Scheduler *scheduler)
     :scheduler_(scheduler)
     ,m_stop_requested(false)
 {
-    LOG << "CpuCore::CpuCore\n";
+    LOG << "BgThread::BgThread\n";
     m_thread_started.store(false, ::std::memory_order_relaxed);
     m_thread_stopped.store(false, ::std::memory_order_release);
-    m_thread = ::std::thread(&CpuCore::thread_function, this);
+    m_thread = ::std::thread(&BgThread::thread_function, this);
 }
 
-CpuCore::~CpuCore()
+BgThread::~BgThread()
 {
     stop_thread();
     m_thread.join();
     LOG << "Processor finished\n";
 }
 
-void CpuCore::stop_thread()
+void BgThread::stop_thread()
 {
     request_stop();
     wake_up();
@@ -122,7 +122,7 @@ void CpuCore::stop_thread()
     ensure_thread_stopped();
 }
 
-void CpuCore::wake_up()
+void BgThread::wake_up()
 {
     m_task_avalable.notify_one();
 }

@@ -22,7 +22,7 @@
 #include "alterstack/AtomicGuard.hpp"
 #include "alterstack/Scheduler.hpp"
 #include "alterstack/Task.hpp"
-#include "alterstack/CpuCore.hpp"
+#include "alterstack/BgThread.hpp"
 #include "alterstack/Logger.hpp"
 
 namespace alterstack
@@ -39,7 +39,7 @@ BgRunner::BgRunner(
     LOG << "BgRunner::BgRunner()\n";
     for(uint32_t i = 0; i < min_spare; ++i)
     {
-        m_cpu_core_list.push_back(::std::unique_ptr<CpuCore>(new CpuCore(scheduler)));
+        m_cpu_core_list.push_back(::std::unique_ptr<BgThread>(new BgThread(scheduler)));
     }
 }
 
@@ -54,7 +54,7 @@ BgRunner::~BgRunner()
 
 void BgRunner::notify_all()
 {
-    if( CpuCore::sleep_count() )
+    if( BgThread::sleep_count() )
     {
         for( auto& core: m_cpu_core_list)
         {
@@ -65,7 +65,7 @@ void BgRunner::notify_all()
 
 void BgRunner::notify()
 {
-    if( CpuCore::sleep_count() )
+    if( BgThread::sleep_count() )
     {
         // FIXME: only single CpuCore need to by notifyed here
         for( auto& core: m_cpu_core_list)

@@ -104,7 +104,7 @@ private:
     friend class Task;
     friend class Awaitable;
     friend class BgRunner;
-    friend class CpuCore;
+    friend class BgThread;
 
     bool do_schedule(bool old_stay_running);
     void do_schedule_new_task(Task *task);
