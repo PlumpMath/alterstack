@@ -1,7 +1,10 @@
 project( alterstack_tests )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-set(COMMON_LIBS ${COMMON_LIBS} -ljemalloc -latomic)
+set(COMMON_LIBS ${COMMON_LIBS} -latomic)
+if( ALTERSTACK_USE_JEMALLOC )
+    set( COMMON_LIBS ${COMMON_LIBS} -ljemalloc )
+endif()
 
 add_executable( test_task_run_simple
     TaskRunSimple.cpp

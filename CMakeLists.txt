@@ -1,6 +1,8 @@
 project(alterstack)
 cmake_minimum_required(VERSION 3.1)
 
+option( ALTERSTACK_USE_JEMALLOC "Link with jemalloc" OFF )
+
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 # this works with only cmake 3.1.0+
