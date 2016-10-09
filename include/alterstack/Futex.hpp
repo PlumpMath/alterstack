@@ -27,13 +27,16 @@
 
 #include <atomic>
 /**
- * @brief Class to implement wait() and notify() for OS thread in lock free way
+ * @brief implements wait() and notify() for OS thread in lockfree way
  *
- * Worker OS thread processing data from one or many lock free queues (or other structures)
- * need to wait if there is no more "work" to do. Also it requires some way to wake up
- * if new work become ready. Futex implementing this behavior. Usage:
- * Producer after enqueueing new work need to call notify() on futex to wake up worker thread.
- * Consumer running in loop check queues for "work", if nothing call Futex::wait()
+ * Worker OS thread processing data from one or many lockfree queues (or other structures)
+ * need to wait if there is no more jobs. Also it requires some way to wake up
+ * if new job becomes ready. Futex implement this behavior.
+ *
+ * Usage:
+ * Producer enqueue new job and then call notify() on futex to wake up worker thread.
+ * Consumer running in loop checks queues for jobs, if nothing call Futex::wait()
+ *
  * Usage:
  * @code{.cpp}
  * int ponsumer()
@@ -60,15 +63,14 @@
  * wait() will set variable work_avalable to "false"
  *   if it was "false" current thread will increment wait_counter
  *     and call syscall futex(FUTEX_WAIT)
- *   else it will return (so that if some producer thread enqueued "work"
- *                        then current thread will check all queues again and call wait()
- *                        after that checks)
+ *   else it will return (to prevent races)
  *   after wake up worker thread will decrement wait_counter
+ *
  * notify() will set work_avalable to "true" and wake up sleeping worker thread
  *     if there is some (wait_counter > 0) by calling futex(FUTEX_WAKE)
  *
  * So in heavy loaded case no workers thread will call wait() and producer threads will
- * call notify() wich will just do read two variables work_avalable and wait_counter.
+ * call notify() which will just do read two variables work_avalable and wait_counter.
  */
 class Futex
 {
