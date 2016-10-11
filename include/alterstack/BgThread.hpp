@@ -21,8 +21,8 @@
 
 #include <atomic>
 #include <thread>
-#include <mutex>
-#include <condition_variable>
+
+#include "Futex.hpp"
 
 namespace alterstack
 {
@@ -68,36 +68,29 @@ public:
 private:
     void thread_function();
     /**
-     * @brief ensure that thread function started, wait until started
-     */
-    void ensure_thread_started();
-    /**
      * @brief ensure that thread function stopped, wait until stop
      */
     void ensure_thread_stopped();
-    bool is_stop_requested_no_lock();
-    void wait_on_cv(::std::unique_lock<std::mutex> &task_ready_guard);
+    bool is_stop_requested();
+    void wait();
 
     Scheduler*        scheduler_;       //!< Scheduler reference
-    std::thread       m_thread;         //!< OS thread
-    std::atomic<bool> m_thread_started; //!< true if thread_function started
+    std::thread       m_os_thread;         //!< OS thread
     std::atomic<bool> m_thread_stopped; //!< true if thread_function stopped
-    bool              m_stop_requested; //!< true when current BgThread need to stop
-    ::std::mutex      m_task_avalable_mutex; //!< mutex to sleep on conditional_variable
-    ::std::condition_variable m_task_avalable; //!< conditional_variable to wait on
+    std::atomic<bool> m_stop_requested; //!< true when current BgThread need to stop
+    Futex             m_task_avalable_futex; //!< Futex to wait for new tasks
 
     static ::std::atomic<uint32_t> m_sleep_count;
 };
 
 inline void BgThread::request_stop()
 {
-    ::std::lock_guard<std::mutex> guard(m_task_avalable_mutex);
-    m_stop_requested = true;
+    m_stop_requested.store( true, std::memory_order_release );
 }
 
-inline bool BgThread::is_stop_requested_no_lock()
+inline bool BgThread::is_stop_requested()
 {
-    return  __builtin_expect( m_stop_requested, false );
+    return  __builtin_expect( m_stop_requested.load(std::memory_order_acquire), false );
 }
 
 inline uint32_t BgThread::sleep_count()
