@@ -35,14 +35,6 @@ matrix:
       compiler: clang
       addons:
         apt:
-          sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.5']
-          packages: ['clang-3.5']
-      env: CXX_COMPILER=clang++-3.5 C_COMPILER=clang-3.5 BUILD_TYPE='Release'
-
-    - os: linux
-      compiler: clang
-      addons:
-        apt:
           sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.6']
           packages: ['clang-3.6']
       env: CXX_COMPILER=clang++-3.6 C_COMPILER=clang-3.6 BUILD_TYPE='Release'
