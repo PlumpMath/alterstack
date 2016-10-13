@@ -29,7 +29,8 @@ class Task;
  * @brief Provides core functionality for one Task to wait another.
  *
  * When created Awaitable in active state and all wait() call will stop current Task and
- * store it in waiting queue. Current OS thread will switch to next running task (if avalable).
+ * store it in wait queue for this Awaitable. Current OS thread will switch to next
+ * running task (if avalable).
  * If no Task avalable Native Task will wait on conditional_variable, AlterNative Task
  * will switch to Native (and sleep there).
  *
