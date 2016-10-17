@@ -19,13 +19,12 @@
 
 #include "alterstack/BgThread.hpp"
 
-#include <sys/prctl.h>
-
 #include "alterstack/AtomicGuard.hpp"
 #include "alterstack/BgRunner.hpp"
 #include "alterstack/Scheduler.hpp"
 #include "alterstack/Task.hpp"
 #include "alterstack/Logger.hpp"
+#include "alterstack/os_utils.h"
 
 namespace alterstack
 {
@@ -37,8 +36,7 @@ void BgThread::thread_function()
     Scheduler::create_native_task_for_current_thread();
     Scheduler::m_thread_info->native_runner = false;
 
-    static const char* name = "BgThread";
-    ::prctl(PR_SET_NAME, reinterpret_cast<unsigned long>(name));
+    os::set_thread_name();
 
     LOG << "BgThread::thread_function: started\n";
 
