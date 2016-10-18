@@ -81,8 +81,8 @@ void Scheduler::switch_to(Task* new_task, TaskState old_task_state)
     default:
         old_task = nullptr;
     }
-    LOG << "Scheduler::switch_to old_task -> new_task"
-        << old_task << " -> " << new_task << "\n";
+    LOG << "Scheduler::switch_to old_task -> new_task(m_context): "
+        << old_task << " -> " << new_task << " (" << new_task->m_context << ")\n";
     m_thread_info->current_task = new_task;
 //    do not remember, why is this here
 //    while( new_task->m_context == nullptr )
@@ -93,6 +93,7 @@ void Scheduler::switch_to(Task* new_task, TaskState old_task_state)
     switch( old_task_state )
     {
     case TaskState::Running:
+    case TaskState::Waiting:
     { // FIXME: check logick for this method
         ::scontext::transfer_t transfer = ::scontext::jump_fcontext(
                     new_task->m_context
@@ -109,17 +110,10 @@ void Scheduler::switch_to(Task* new_task, TaskState old_task_state)
         // did it's work)
         prev_task = (Task*)transfer.data;
         if( prev_task != nullptr )
+        {
             prev_task->m_context = transfer.fctx;
-        break;
-    }
-    case TaskState::Waiting:
-    {
-        ::scontext::transfer_t transfer = ::scontext::jump_fcontext(
-                    new_task->m_context
-                    ,(void*)nullptr);
-        prev_task = (Task*)transfer.data;
-        if( prev_task != nullptr )
-            prev_task->m_context = transfer.fctx;
+            LOG << "Scheduler::switch_to saved prev_task m_context " << transfer.fctx << "\n";
+        }
         break;
     }
     default:
@@ -129,7 +123,10 @@ void Scheduler::switch_to(Task* new_task, TaskState old_task_state)
                     ,nullptr);
         prev_task = (Task*)transfer.data;
         if( prev_task != nullptr )
+        {
             prev_task->m_context = transfer.fctx;
+            LOG << "Scheduler::switch_to saved prev_task m_context " << transfer.fctx << "\n";
+        }
         break;
     }
     }
@@ -145,7 +142,8 @@ void Scheduler::post_switch_fixup(Task *prev_task)
         LOG << "Scheduler::post_switch_fixup: old_task == nullptr, do nothing\n";
         return;
     }
-    if( !prev_task->is_native() ) // AlterNative
+    if( !prev_task->is_native() // AlterNative
+            && prev_task->m_state == TaskState::Running )
     {
         LOG << "Scheduler::post_switch_fixup: enqueueing old task\n";
         enqueue_task(prev_task);
@@ -205,7 +203,7 @@ void Scheduler::do_schedule_waiting_task()
      * running list and current_task->m_context == nullptr to protect scheduling current task
      * for other thread (if it is AlterNative Task).
      */
-    LOG << "Scheduler::wait_on: trying to schedule next task\n";
+    LOG << "Scheduler::do_schedule_waiting_task: trying to schedule next task\n";
     bool switched = schedule(false);
     // Nothing to schedule or waiting finished
     Task* current_task = get_current_task();

@@ -82,7 +82,6 @@ BgRunner (в работе)| running queue        |переключаемся н�
 
 #TODO
 
-1. зависимость от boost убрана, теперь нужно починить тесты
 1. scheduler per core running Tasks queue (use hwloc)
 3. class Future to wait for data ready
 4. Unit Tests

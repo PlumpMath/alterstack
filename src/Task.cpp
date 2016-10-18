@@ -63,6 +63,7 @@ Task::~Task()
 void Task::set_function() // FIXME: this hack will be fixed with extending runnable types
 {
     m_context = ctx::make_fcontext( m_stack->stack_top(), m_stack->size(), _run_wrapper);
+    LOG << "Task::set_function(): m_context " << m_context << "\n";
 }
 
 void Task::run( ::std::function<void()> runnable )
@@ -98,32 +99,34 @@ void Task::_run_wrapper( ::scontext::transfer_t transfer ) noexcept
 {
     try
     {
-        // FIXME: check this logic, old context missed
-        // FIXME: use {} to constrain scope, because function will never end
-        Task* old_task = reinterpret_cast<Task*>(transfer.data);
-        if( old_task != nullptr )
-            old_task->m_context = transfer.fctx;
-        Scheduler::post_switch_fixup(old_task);
-        LOG << "Task::_run_wrapper: started\n"
-            << "old_task, context " << old_task;
-        if( old_task != nullptr )
-            LOG << " " << old_task->m_context << "\n";
-
-        Task* current = Scheduler::get_current_task();
-        current->m_runnable();
-        LOG << "Task::_run_wrapper: runnable finished, cleaning Task\n";
-
-        current->m_state = TaskState::Finished;
-        current->release();
-
-        // _run_wrapper() used only in AlterNative(BgRunner) Task
-        Task* next_task = Scheduler::get_next_task();
-        if(next_task == nullptr)
+        Task* next_task;
         {
-            next_task = Scheduler::get_native_task();
+            LOG << "Task::_run_wrapper: started\n";
+            // FIXME: check this logic, old context missed
+            Task* prev_task = reinterpret_cast<Task*>(transfer.data);
+            if( prev_task != nullptr )
+            {
+                prev_task->m_context = transfer.fctx;
+                LOG << "Task::_run_wrapper saved prev_task m_context " << transfer.fctx << "\n";
+            }
+            Scheduler::post_switch_fixup(prev_task);
+
+            Task* current = Scheduler::get_current_task();
+            current->m_runnable();
+            LOG << "Task::_run_wrapper: runnable finished, cleaning Task\n";
+
+            current->m_state = TaskState::Finished;
+            current->release();
+
+            // _run_wrapper() used only in AlterNative(BgRunner) Task
+            next_task = Scheduler::get_next_task();
+            if(next_task == nullptr)
+            {
+                next_task = Scheduler::get_native_task();
+            }
+            current->m_state = TaskState::Created;
+            assert(next_task != nullptr);
         }
-        current->m_state = TaskState::Created;
-        assert(next_task != nullptr);
         Scheduler::switch_to(next_task, TaskState::Finished); // exactly Finished
 
         // This line is unreachable,
