@@ -36,48 +36,17 @@ class BgRunner
 {
 public:
     BgRunner() = delete;
-    /**
-     * @brief thread pool constructor
-     * @param scheduler Scheduler reference
-     * @param min_spare number of threads to start
-     * @param max_running max BgThread to use
-     */
     explicit BgRunner(
             Scheduler* scheduler
             ,uint32_t min_spare = 1
-            ,uint32_t max_running = std::thread::hardware_concurrency());
+            ,uint32_t max_running = std::thread::hardware_concurrency() );
     ~BgRunner();
 
-    /**
-     * @brief set spare BgThread count
-     * @param cores count
-     */
-    void set_min_cores(uint32_t cores); // not implemented
-    /**
-     * @brief set max BgThread limit
-     * @param cores max limit
-     */
-    void set_max_cores(uint32_t cores); // not implemented
-
-private:
-    friend class BgThread;
-    friend class Scheduler;
-    /**
-     * @brief wake up all sleeping BgThread's
-     */
     void notify_all();
-    /**
-     * @brief notify BgRunner, that there is more Task s in RunningQueue
-     *
-     * If some BgThread is sleeping, one will be woked up
-     */
     void notify();
 
-    Scheduler* scheduler_;   //!< reference to Scheduler
-    uint32_t   min_spare_;   //!< min spare threads
-    uint32_t   max_running_; //!< max BgThread threads limit
+private:
     ::std::deque<std::unique_ptr<BgThread>> m_cpu_core_list;
 };
 
 }
-

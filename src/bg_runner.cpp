@@ -22,19 +22,20 @@
 #include "alterstack/atomic_guard.h"
 #include "alterstack/scheduler.h"
 #include "alterstack/task.h"
-#include "alterstack/bg_thread.h"
 #include "alterstack/logger.h"
 
 namespace alterstack
 {
-
+/**
+ * @brief thread pool constructor
+ * @param scheduler Scheduler reference
+ * @param min_spare number of threads to start
+ * @param max_running max BgThread to use
+ */
 BgRunner::BgRunner(
         Scheduler* scheduler
         ,uint32_t min_spare
-        ,uint32_t max_running)
-    :scheduler_(scheduler)
-    ,min_spare_(min_spare)
-    ,max_running_(max_running)
+        ,uint32_t max_running )
 {
     LOG << "BgRunner::BgRunner()\n";
     for(uint32_t i = 0; i < min_spare; ++i)
@@ -51,7 +52,9 @@ BgRunner::~BgRunner()
     }
     LOG << "BgRunner::~BgRunner()\n";
 }
-
+/**
+ * @brief wake up all sleeping BgThread's
+ */
 void BgRunner::notify_all()
 {
     if( BgThread::sleep_count() )
@@ -62,7 +65,11 @@ void BgRunner::notify_all()
         }
     }
 }
-
+/**
+ * @brief notify BgRunner, that there is more Task s in RunningQueue
+ *
+ * If some BgThread is sleeping, one will be woked up
+ */
 void BgRunner::notify()
 {
     if( BgThread::sleep_count() )
