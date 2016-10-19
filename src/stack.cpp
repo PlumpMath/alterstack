@@ -17,7 +17,7 @@
  * along with Alterstack.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#include "alterstack/Stack.hpp"
+#include "alterstack/stack.h"
 
 #if defined(WITH_VALGRIND)
 #include <valgrind/valgrind.h>

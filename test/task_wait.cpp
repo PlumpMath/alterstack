@@ -17,8 +17,7 @@
  * along with Alterstack.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#include "alterstack/Api.hpp"
-#include "alterstack/Scheduler.hpp"
+#include "alterstack/api.h"
 
 #include <iostream>
 

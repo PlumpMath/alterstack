@@ -17,13 +17,13 @@
  * along with Alterstack.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#include "alterstack/BgThread.hpp"
+#include "alterstack/bg_thread.h"
 
-#include "alterstack/AtomicGuard.hpp"
-#include "alterstack/BgRunner.hpp"
-#include "alterstack/Scheduler.hpp"
-#include "alterstack/Task.hpp"
-#include "alterstack/Logger.hpp"
+#include "alterstack/atomic_guard.h"
+#include "alterstack/bg_runner.h"
+#include "alterstack/scheduler.h"
+#include "alterstack/task.h"
+#include "alterstack/logger.h"
 #include "alterstack/os_utils.h"
 
 namespace alterstack

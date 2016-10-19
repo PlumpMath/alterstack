@@ -22,7 +22,7 @@
 #include <atomic>
 #include <thread>
 
-#include "Futex.hpp"
+#include "alterstack/futex.h"
 
 namespace alterstack
 {

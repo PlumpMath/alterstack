@@ -17,13 +17,13 @@
  * along with Alterstack.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#include "alterstack/Task.hpp"
+#include "alterstack/task.h"
 
 #include <thread>
 #include <stdexcept>
 
-#include "alterstack/Scheduler.hpp"
-#include "alterstack/Logger.hpp"
+#include "alterstack/scheduler.h"
+#include "alterstack/logger.h"
 
 namespace alterstack
 {

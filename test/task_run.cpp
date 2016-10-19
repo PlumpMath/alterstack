@@ -17,7 +17,7 @@
  * along with Alterstack.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#include "alterstack/Api.hpp"
+#include "alterstack/api.h"
 
 #include <functional>
 #include <iostream>

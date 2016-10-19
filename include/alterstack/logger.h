@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "alterstack/Scheduler.hpp"
+#include "alterstack/scheduler.h"
 
 #include <CrashLog.hpp>
 

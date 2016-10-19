@@ -17,9 +17,9 @@
  * along with Alterstack.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#include "alterstack/Awaitable.hpp"
-#include "alterstack/Scheduler.hpp"
-#include "alterstack/Logger.hpp"
+#include "alterstack/awaitable.h"
+#include "alterstack/scheduler.h"
+#include "alterstack/logger.h"
 
 #include <cassert>
 

@@ -17,11 +17,11 @@
  * along with Alterstack.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#include "alterstack/Scheduler.hpp"
+#pragma once
 
-namespace alterstack
-{
-thread_local ::std::unique_ptr<AsThreadInfo> Scheduler::m_thread_info;
-}
+#include "alterstack/task.h"
 
-
+//namespace coop
+//{
+//using alterstack::Task;
+//}

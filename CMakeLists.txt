@@ -16,13 +16,13 @@ include_directories( ext/cpu_utils/include )
 include_directories(include)
 
 set(alterstack_SRCS
-    src/StaticsInit.cpp
-    src/Awaitable.cpp
-    src/Scheduler.cpp
-    src/BgRunner.cpp
-    src/BgThread.cpp
-    src/Stack.cpp
-    src/Task.cpp
+    src/statics_init.cpp
+    src/awaitable.cpp
+    src/scheduler.cpp
+    src/bg_runner.cpp
+    src/bg_thread.cpp
+    src/stack.cpp
+    src/task.cpp
 )
 
 add_definitions(-std=c++11 -Wall -pedantic -mtune=native -march=native -pthread)

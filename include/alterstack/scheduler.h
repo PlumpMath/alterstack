@@ -27,13 +27,13 @@
 #include <condition_variable>
 
 #include "running_queue.hpp"
-#include "Awaitable.hpp"
-#include "Context.hpp"
-#include "Stack.hpp"
+#include "awaitable.h"
+#include "context.h"
+#include "stack.h"
 #include "NativeInfo.hpp"
-#include "Task.hpp"
-#include "BgRunner.hpp"
-#include "Logger.hpp"
+#include "task.h"
+#include "bg_runner.h"
+#include "logger.h"
 
 namespace alterstack
 {

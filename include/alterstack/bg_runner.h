@@ -24,7 +24,7 @@
 #include <memory>
 #include <thread>
 
-#include "BgThread.hpp"
+#include "bg_thread.h"
 
 namespace alterstack
 {

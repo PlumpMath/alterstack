@@ -17,16 +17,16 @@
  * along with Alterstack.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#include "alterstack/Scheduler.hpp"
+#include "alterstack/scheduler.h"
 
 #include <string>
 #include <thread>
 
-#include "alterstack/Stack.hpp"
+#include "alterstack/stack.h"
 #include "alterstack/SpinLock.hpp"
-#include "alterstack/Context.hpp"
-#include "alterstack/BgRunner.hpp"
-#include "alterstack/Logger.hpp"
+#include "alterstack/context.h"
+#include "alterstack/bg_runner.h"
+#include "alterstack/logger.h"
 
 namespace alterstack
 {

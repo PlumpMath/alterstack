@@ -23,11 +23,11 @@
 #include <cstdint>
 #include <memory>
 
-#include "Awaitable.hpp"
+#include "awaitable.h"
 #include "TaskState.hpp"
-#include "Scheduler.hpp"
-#include "Stack.hpp"
-#include "Context.hpp"
+#include "scheduler.h"
+#include "stack.h"
+#include "context.h"
 #include "NativeInfo.hpp"
 #include "task_buffer.hpp"
 #include "task_stack.hpp"
