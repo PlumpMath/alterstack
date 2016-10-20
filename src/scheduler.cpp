@@ -37,7 +37,17 @@ Scheduler::Scheduler()
     :bg_runner_(this)
     ,running_queue_()
 {}
-
+/**
+ * @brief schedule next task on current OS thread
+ *
+ * If current_still_running == true, current task stay Running
+ *
+ * schedule() tries to find next Running Task using scheduling algorithm of Scheduler.
+ * If new task available switch OS thread to it. If no Task available
+ * do nothing (continue running current Task).
+ * @param old_stay_running if true, save old task in running queue
+ * @return true if at least one switch done
+ */
 bool Scheduler::schedule(bool old_stay_running)
 {
     return instance().do_schedule(old_stay_running);
@@ -57,6 +67,10 @@ bool Scheduler::do_schedule(bool old_stay_running)
               ,old_stay_running ? TaskState::Running : TaskState::Waiting);
     return true;
 }
+/**
+ * @brief switch OS thread to newly created Task, current task stay Running
+ * @param task new task to run
+ */
 void Scheduler::schedule_new_task( Task* task )
 {
     instance().do_schedule_new_task(task);
@@ -67,7 +81,22 @@ void Scheduler::do_schedule_new_task( Task* task )
     task->set_function(); // FIXME: this hack will be fixed with extending runnable types
     switch_to(task);
 }
-
+/**
+ * @brief switch current task to new and store old task in running if required
+ * @param new_task next task to run
+ * @param old_task_state running state of old task
+ *
+ * old_task_state == Task::RunState::Running current task will be stored in
+ * running queue or in native
+ * old_task_state == Task::RunState::Waiting current task olready stored in waiting queue
+ * old_task_state == Task::RunState::Finished current task can be destroied, do not use it
+ *
+ * Switching tasks consist of two steps:
+ *
+ * 1. switch stack (context) to new one
+ * 2. store old task in running queue if old still running
+ * Last step done in post_switch_fixup() which is part of switch_to().
+ */
 void Scheduler::switch_to(Task* new_task, TaskState old_task_state)
 {
     LOG << "Scheduler::switch_to\n";
@@ -133,7 +162,10 @@ void Scheduler::switch_to(Task* new_task, TaskState old_task_state)
 
     post_switch_fixup(prev_task);
 }
-
+/**
+ * @brief store old task in running queue, if it is not nullptr and is AlterNative
+ * @param old_task task to store
+ */
 void Scheduler::post_switch_fixup(Task *prev_task)
 {
     LOG << "Scheduler::post_switch_fixup\n";
@@ -149,7 +181,10 @@ void Scheduler::post_switch_fixup(Task *prev_task)
         enqueue_task(prev_task);
     }
 }
-
+/**
+ * @brief get current Task*
+ * @return pointer to current Task
+ */
 Task *Scheduler::get_current_task()
 {
     if( !m_thread_info )
@@ -166,7 +201,10 @@ Task *Scheduler::get_current_task()
     }
     return m_thread_info->current_task;
 }
-
+/**
+ * @brief get Native Task pointer (create Task instance if does not exist)
+ * @return Task* to Native Task instance
+ */
 Task *Scheduler::get_native_task()
 {
     if( !m_thread_info )
@@ -179,7 +217,9 @@ Task *Scheduler::get_native_task()
     }
     return m_thread_info->native_task.get();
 }
-
+/**
+ * @brief create thread_local native Task instance
+ */
 void Scheduler::create_native_task_for_current_thread()
 {
     if( !m_thread_info )
@@ -192,6 +232,9 @@ void Scheduler::create_native_task_for_current_thread()
         LOG << "make_native_task: created native task " << m_thread_info->native_task.get() << "\n";
     }
 }
+/**
+ * @brief switch to new task or wait because current task is waiting
+ */
 void Scheduler::schedule_waiting_task()
 {
     instance().do_schedule_waiting_task();
@@ -227,7 +270,10 @@ void Scheduler::do_schedule_waiting_task()
         return;
     }
 }
-
+/**
+ * @brief get Task* from running queue
+ * @return Task* or nullptr if queue is empty
+ */
 Task* Scheduler::get_next_from_queue() noexcept
 {
     bool have_more_tasks = false;
@@ -240,7 +286,10 @@ Task* Scheduler::get_next_from_queue() noexcept
     }
     return task;
 }
-
+/**
+ * @brief get Native Task* if it is running or nullptr
+ * @return Native Task* or nullptr
+ */
 Task* Scheduler::get_next_from_native()
 {
     ::std::lock_guard<::std::mutex> native_guard(m_thread_info->native_mutex);
@@ -251,7 +300,11 @@ Task* Scheduler::get_next_from_native()
     }
     return nullptr;
 }
-
+/**
+ * @brief enqueue task in running queue
+ * @param task task to store
+ * get_next_from_native() is threadsafe
+ */
 void Scheduler::enqueue_task(Task *task) noexcept
 {
     assert(task != nullptr);
@@ -259,7 +312,10 @@ void Scheduler::enqueue_task(Task *task) noexcept
     LOG << "Scheduler::enqueue_task: task " << task << " stored in running task queue\n";
     instance().bg_runner_.notify();
 }
-
+/**
+ * @brief get next Task* to run using schedule algorithm of Scheduler
+ * @return next running Task* or nullptr
+ */
 Task *Scheduler::get_next_task()
 {
     Task* current = get_current_task();
