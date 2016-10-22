@@ -33,8 +33,7 @@ namespace alterstack
 void BgThread::thread_function()
 {
     AtomicReturnBoolGuard thread_stopped_guard(m_thread_stopped);
-    Scheduler::create_native_task_for_current_thread();
-    Scheduler::m_thread_info->native_runner = false;
+    Scheduler::create_native_task_for_current_thread( RunnerType::BgRunner );
 
     os::set_thread_name();
 

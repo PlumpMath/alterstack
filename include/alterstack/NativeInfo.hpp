@@ -26,14 +26,27 @@ namespace alterstack
 {
 class Task;
 
+enum class RunnerType
+{
+    NativeRunner,
+    BgRunner
+};
+
 struct AsThreadInfo
 {
+    AsThreadInfo() = delete;
+    AsThreadInfo( RunnerType runner_type = RunnerType::NativeRunner );
+
     ::std::unique_ptr<Task>   native_task;
     Task*                     current_task = nullptr;
     ::std::mutex              native_mutex;
     ::std::condition_variable native_ready;
     /// used to distinguish AlterNative Task runner thread Native vs. BgRunner
-    bool                      native_runner = true;
+    RunnerType                runner_type;
 };
+
+inline AsThreadInfo::AsThreadInfo( RunnerType runner_type )
+    :runner_type( runner_type )
+{}
 
 }

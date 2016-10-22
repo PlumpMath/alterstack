@@ -80,7 +80,8 @@ private:
     static void  enqueue_task(Task* task) noexcept;
     static Task* get_current_task();
     static Task* get_native_task();
-    static void  create_native_task_for_current_thread();
+    static void  create_native_task_for_current_thread(
+            RunnerType runner_type = RunnerType::NativeRunner );
     static Task* get_next_task();
 
     static thread_local ::std::unique_ptr<AsThreadInfo> m_thread_info;
