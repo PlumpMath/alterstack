@@ -252,10 +252,9 @@ void Scheduler::do_schedule_waiting_task()
     Task* current_task = get_current_task();
     if( current_task->is_native() )
     {
-        std::unique_lock<std::mutex> native_guard(current_task->m_native_info->native_mutex);
         while(current_task->m_state == TaskState::Waiting)
         {
-            current_task->m_native_info->native_ready.wait(native_guard); // FIXME: limit wait time
+            current_task->m_native_info->native_futex.wait();
         }
         return;
     }
@@ -292,7 +291,6 @@ Task* Scheduler::get_next_from_queue() noexcept
  */
 Task* Scheduler::get_next_from_native()
 {
-    ::std::lock_guard<::std::mutex> native_guard(m_thread_info->native_mutex);
     if( m_thread_info->native_task->m_state == TaskState::Running )
     {
         LOG << "Scheduler::_get_next_from_native: got native task\n";

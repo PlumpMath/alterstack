@@ -132,10 +132,8 @@ void Awaitable::release()
         {
             LOG << "Awaitable::release: task " << task <<
                    " is Native, marking Ready and notifying\n";
-            std::unique_lock<std::mutex> native_guard(task->m_native_info->native_mutex);
             task->m_state = TaskState::Running;
-            native_guard.unlock();
-            task->m_native_info->native_ready.notify_one();
+            task->m_native_info->native_futex.notify();
         }
         else // AlterNative or BgRunner
         {

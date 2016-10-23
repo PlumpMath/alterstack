@@ -19,8 +19,9 @@
 
 #pragma once
 
-#include <condition_variable>
-#include <mutex>
+#include <memory>
+
+#include "futex.h"
 
 namespace alterstack
 {
@@ -38,9 +39,9 @@ struct AsThreadInfo
     AsThreadInfo( RunnerType runner_type = RunnerType::NativeRunner );
 
     ::std::unique_ptr<Task>   native_task;
-    Task*                     current_task = nullptr;
-    ::std::mutex              native_mutex;
-    ::std::condition_variable native_ready;
+    Task* current_task = nullptr;
+    Futex native_futex;
+
     /// used to distinguish AlterNative Task runner thread Native vs. BgRunner
     RunnerType                runner_type;
 };

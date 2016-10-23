@@ -114,7 +114,7 @@ private:
     Context    m_context;
 
     AsThreadInfo* const m_native_info;
-    TaskState    m_state;
+    TaskState    m_state; // FIXME: make it atomic
 
     std::unique_ptr<Stack>  m_stack;
     ::std::function<void()> m_runnable;
