@@ -21,7 +21,7 @@
 
 namespace alterstack
 {
-thread_local ::std::unique_ptr<AsThreadInfo> Scheduler::m_thread_info;
+thread_local ::std::unique_ptr<RunnerInfo> Scheduler::m_thread_info;
 }
 
 

@@ -33,21 +33,19 @@ enum class RunnerType
     BgRunner
 };
 
-struct AsThreadInfo
+struct RunnerInfo
 {
-    AsThreadInfo() = delete;
-    AsThreadInfo( RunnerType runner_type = RunnerType::NativeRunner );
+    RunnerInfo() = delete;
+    RunnerInfo( RunnerType type = RunnerType::NativeRunner );
 
     ::std::unique_ptr<Task>   native_task;
     Task* current_task = nullptr;
     Futex native_futex;
-
-    /// used to distinguish AlterNative Task runner thread Native vs. BgRunner
-    RunnerType                runner_type;
+    RunnerType type;
 };
 
-inline AsThreadInfo::AsThreadInfo( RunnerType runner_type )
-    :runner_type( runner_type )
+inline RunnerInfo::RunnerInfo( RunnerType runner_type )
+    :type( runner_type )
 {}
 
 }

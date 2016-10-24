@@ -36,7 +36,7 @@ Task::Task()
     ,m_stack(new Stack())
 {}
 
-Task::Task(AsThreadInfo* native_info)
+Task::Task(RunnerInfo* native_info)
     :m_context(nullptr)
     ,m_native_info(native_info)
     ,m_state(TaskState::Running)

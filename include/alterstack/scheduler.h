@@ -30,7 +30,7 @@
 #include "awaitable.h"
 #include "context.h"
 #include "stack.h"
-#include "NativeInfo.hpp"
+#include "runner_info.h"
 #include "task.h"
 #include "bg_runner.h"
 #include "logger.h"
@@ -84,7 +84,7 @@ private:
             RunnerType runner_type = RunnerType::NativeRunner );
     static Task* get_next_task();
 
-    static thread_local ::std::unique_ptr<AsThreadInfo> m_thread_info;
+    static thread_local ::std::unique_ptr<RunnerInfo> m_thread_info;
     BgRunner bg_runner_;
     RunningQueue<Task> running_queue_;
 };

@@ -189,7 +189,7 @@ Task *Scheduler::get_current_task()
 {
     if( !m_thread_info )
     {
-        m_thread_info.reset(new AsThreadInfo( RunnerType::NativeRunner ));
+        m_thread_info.reset(new RunnerInfo( RunnerType::NativeRunner ));
     }
     if (m_thread_info->current_task == nullptr )
     {
@@ -209,7 +209,7 @@ Task *Scheduler::get_native_task()
 {
     if( !m_thread_info )
     {
-        m_thread_info.reset(new AsThreadInfo( RunnerType::NativeRunner ) );
+        m_thread_info.reset(new RunnerInfo( RunnerType::NativeRunner ) );
     }
     if( !m_thread_info->native_task )
     {
@@ -224,7 +224,7 @@ void Scheduler::create_native_task_for_current_thread( RunnerType runner_type )
 {
     if( !m_thread_info )
     {
-        m_thread_info.reset( new AsThreadInfo(runner_type) );
+        m_thread_info.reset( new RunnerInfo(runner_type) );
     }
     if( !m_thread_info->native_task )
     {
@@ -325,7 +325,7 @@ Task *Scheduler::get_next_task()
     }
     else
     {
-        if( m_thread_info->runner_type == RunnerType::NativeRunner )
+        if( m_thread_info->type == RunnerType::NativeRunner )
             // Native thread running on AlterStack
         {
             LOG << "Scheduler::_get_next_task: in AlterNative\n";

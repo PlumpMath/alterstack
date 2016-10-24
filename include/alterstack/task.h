@@ -28,7 +28,7 @@
 #include "scheduler.h"
 #include "stack.h"
 #include "context.h"
-#include "NativeInfo.hpp"
+#include "runner_info.h"
 #include "task_buffer.hpp"
 #include "task_stack.hpp"
 #include "running_queue.hpp"
@@ -54,7 +54,7 @@ public:
      * It is Hack
      * @param native_info pointer to NativeInfo
      */
-    explicit Task(AsThreadInfo *native_info);
+    explicit Task(RunnerInfo *native_info);
     /**
      * @brief destructor will wait if Task still Running
      */
@@ -113,8 +113,8 @@ private:
     Task*      next_ = nullptr;
     Context    m_context;
 
-    AsThreadInfo* const m_native_info;
-    TaskState    m_state; // FIXME: make it atomic
+    RunnerInfo* const m_native_info;
+    TaskState   m_state; // FIXME: make it atomic
 
     std::unique_ptr<Stack>  m_stack;
     ::std::function<void()> m_runnable;
