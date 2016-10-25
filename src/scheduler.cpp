@@ -23,7 +23,7 @@
 #include <thread>
 
 #include "alterstack/stack.h"
-#include "alterstack/SpinLock.hpp"
+#include "alterstack/spin_lock.h"
 #include "alterstack/context.h"
 #include "alterstack/bg_runner.h"
 #include "alterstack/logger.h"
