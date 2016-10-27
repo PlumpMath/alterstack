@@ -44,54 +44,20 @@ namespace alterstack
 class Task
 {
 public:
-    /**
-     * @brief constructor to create AlterNative Task
-     */
-    Task();
-    /**
-     * @brief constructor to create Native Task
-     *
-     * It is Hack
-     * @param native_info pointer to NativeInfo
-     */
-    explicit Task(RunnerInfo *native_info);
-    /**
-     * @brief destructor will wait if Task still Running
-     */
+    Task(); // will create AlterNative Task
+    explicit Task(RunnerInfo *native_info); // wil lcreate create Native Task
     ~Task();
+
     Task(const Task&) = delete;
     Task(Task&&)      = delete;
     Task& operator=(const Task&) = delete;
     Task& operator=(Task&&)      = delete;
 
-    /**
-     * @brief temporary function (HACK)
-     *
-     * will be removed or modified when any runnable can be started by Task
-     */
     void set_function();
-    /**
-     * @brief starts executing Task
-     * @param runnable void() function or functor to start
-     */
     void run(::std::function<void()> runnable);
-    /**
-     * @brief yield current Task, schedule next (if avalable), current stay running
-     */
     static void yield();
-    /**
-     * @brief switch caller Task in Waiting state while this is Running
-     *
-     * If this already finished return immediately
-     */
     void wait();
-    /**
-     * @brief release all Tasks waiting this.
-     *
-     * release() is threadsafe
-     */
     void release();
-
 
 private:
     friend class Scheduler;
@@ -121,6 +87,11 @@ private:
     ::std::function<void()> m_runnable;
 };
 
+/**
+ * @brief release all Tasks waiting this.
+ *
+ * release() is threadsafe
+ */
 inline void Task::release()
 {
     awaitable_.release();

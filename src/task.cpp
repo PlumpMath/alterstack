@@ -32,18 +32,27 @@ namespace alterstack
 
 namespace ctx = ::scontext;
 
+/**
+ * @brief constructor to create AlterNative Task
+ */
 Task::Task()
     :m_native_info(nullptr)
     ,m_state(TaskState::Created)
     ,m_stack(new Stack())
 {}
-
+/**
+ * @brief constructor to create Native Task
+ *
+ * @param native_info points to RunnerInfo
+ */
 Task::Task(RunnerInfo* native_info)
     :m_context(nullptr)
     ,m_native_info(native_info)
     ,m_state(TaskState::Running)
 {}
-
+/**
+ * @brief destructor will wait if Task still Running
+ */
 Task::~Task()
 {
     LOG << "Task::~Task: " << this << "\n";
@@ -61,13 +70,20 @@ Task::~Task()
         }
     }
 }
-
+/**
+ * @brief temporary function (HACK)
+ *
+ * will be removed or modified when any runnable can be started by Task
+ */
 void Task::set_function() // FIXME: this hack will be fixed with extending runnable types
 {
     m_context = ctx::make_fcontext( m_stack->stack_top(), m_stack->size(), _run_wrapper);
     LOG << "Task::set_function(): m_context " << m_context << "\n";
 }
-
+/**
+ * @brief starts executing Task
+ * @param runnable void() function or functor to start
+ */
 void Task::run( ::std::function<void()> runnable )
 {
     LOG << "Task::run\n";
@@ -80,11 +96,19 @@ void Task::run( ::std::function<void()> runnable )
     Scheduler::schedule_new_task( this );
 }
 
+/**
+ * @brief yield current Task, schedule next (if avalable), current stay running
+ */
 void Task::yield()
 {
     Scheduler::schedule();
 }
 
+/**
+ * @brief switch caller Task in Waiting state while this is Running
+ *
+ * If this already finished return immediately
+ */
 void Task::wait()
 {
     if( m_state == TaskState::Created
