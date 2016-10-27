@@ -19,6 +19,8 @@
 
 #include "alterstack/task.h"
 
+#include <cstdlib>
+
 #include <thread>
 #include <stdexcept>
 
@@ -141,6 +143,7 @@ void Task::_run_wrapper( ::scontext::transfer_t transfer ) noexcept
     {
         LOG << "Task::_run_wrapper: Got strange exception\n";
     }
+    ::exit(EXIT_FAILURE);
 }
 
 }
