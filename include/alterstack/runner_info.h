@@ -22,10 +22,10 @@
 #include <memory>
 
 #include "futex.h"
+#include "task.h"
 
 namespace alterstack
 {
-class Task;
 
 enum class RunnerType
 {
@@ -33,19 +33,40 @@ enum class RunnerType
     BgRunner
 };
 
-struct RunnerInfo
+class RunnerInfo
 {
-    RunnerInfo() = delete;
-    RunnerInfo( RunnerType type = RunnerType::NativeRunner );
+public:
+    RunnerInfo();
 
-    ::std::unique_ptr<Task>   native_task;
+    static RunnerInfo& current();
+    RunnerType type() const;
+    void set_type(RunnerType runner_type);
+
     Task* current_task = nullptr;
+    Task  native_task;
     Futex native_futex;
-    RunnerType type;
+    RunnerType m_type;
 };
 
-inline RunnerInfo::RunnerInfo( RunnerType runner_type )
-    :type( runner_type )
+inline RunnerInfo::RunnerInfo()
+    :native_task( this )
+    ,m_type( RunnerType::NativeRunner )
 {}
+
+inline RunnerInfo& RunnerInfo::current()
+{
+    static thread_local RunnerInfo runner_info{};
+    return runner_info;
+}
+
+inline RunnerType RunnerInfo::type() const
+{
+    return m_type;
+}
+
+inline void RunnerInfo::set_type(RunnerType runner_type)
+{
+    m_type = runner_type;
+}
 
 }

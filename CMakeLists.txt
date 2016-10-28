@@ -16,7 +16,6 @@ include_directories( ext/cpu_utils/include )
 include_directories(include)
 
 set(alterstack_SRCS
-    src/statics_init.cpp
     src/awaitable.cpp
     src/scheduler.cpp
     src/bg_runner.cpp

@@ -23,6 +23,7 @@
 #include "alterstack/bg_runner.h"
 #include "alterstack/scheduler.h"
 #include "alterstack/task.h"
+#include "alterstack/runner_info.h"
 #include "alterstack/logger.h"
 #include "alterstack/os_utils.h"
 
@@ -33,7 +34,7 @@ namespace alterstack
 void BgThread::thread_function()
 {
     AtomicReturnBoolGuard thread_stopped_guard(m_thread_stopped);
-    Scheduler::create_native_task_for_current_thread( RunnerType::BgRunner );
+    RunnerInfo::current().set_type( RunnerType::BgRunner );
 
     os::set_thread_name();
 

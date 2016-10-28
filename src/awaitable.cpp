@@ -19,6 +19,7 @@
 
 #include "alterstack/awaitable.h"
 #include "alterstack/scheduler.h"
+#include "alterstack/runner_info.h"
 #include "alterstack/logger.h"
 
 #include <cassert>

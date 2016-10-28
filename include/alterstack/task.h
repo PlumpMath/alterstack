@@ -28,13 +28,13 @@
 #include "scheduler.h"
 #include "stack.h"
 #include "context.h"
-#include "runner_info.h"
 #include "task_buffer.hpp"
 #include "task_stack.hpp"
 #include "running_queue.hpp"
 
 namespace alterstack
 {
+class RunnerInfo;
 /**
  * @brief Main class to start and wait tasks.
  *
