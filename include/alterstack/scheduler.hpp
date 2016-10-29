@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Alexey Syrnikov <san@masterspline.net>
+ * Copyright 2015-2016 Alexey Syrnikov <san@masterspline.net>
  * 
  * This file is part of Alterstack.
  *
@@ -27,12 +27,12 @@
 #include <condition_variable>
 
 #include "running_queue.hpp"
-#include "awaitable.h"
-#include "context.h"
-#include "stack.h"
-#include "task.h"
-#include "bg_runner.h"
-#include "logger.h"
+#include "awaitable.hpp"
+#include "context.hpp"
+#include "stack.hpp"
+#include "task.hpp"
+#include "bg_runner.hpp"
+#include "logger.hpp"
 
 namespace alterstack
 {

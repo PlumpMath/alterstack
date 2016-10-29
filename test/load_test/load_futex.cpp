@@ -26,7 +26,7 @@
 
 #include <iostream>
 
-#include "alterstack/futex.h"
+#include "alterstack/futex.hpp"
 
 class TestLockFreeQueue
 {

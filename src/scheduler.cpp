@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Alexey Syrnikov <san@masterspline.net>
+ * Copyright 2015-2016 Alexey Syrnikov <san@masterspline.net>
  * 
  * This file is part of Alterstack.
  *
@@ -17,17 +17,17 @@
  * along with Alterstack.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#include "alterstack/scheduler.h"
+#include "alterstack/scheduler.hpp"
 
 #include <string>
 #include <thread>
 
-#include "alterstack/stack.h"
-#include "alterstack/spin_lock.h"
-#include "alterstack/context.h"
-#include "alterstack/bg_runner.h"
-#include "alterstack/runner_info.h"
-#include "alterstack/logger.h"
+#include "alterstack/stack.hpp"
+#include "alterstack/spin_lock.hpp"
+#include "alterstack/context.hpp"
+#include "alterstack/bg_runner.hpp"
+#include "alterstack/runner_info.hpp"
+#include "alterstack/logger.hpp"
 
 namespace alterstack
 {

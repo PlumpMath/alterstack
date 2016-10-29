@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Alexey Syrnikov <san@masterspline.net>
+ * Copyright 2015-2016 Alexey Syrnikov <san@masterspline.net>
  * 
  * This file is part of Alterstack.
  *
@@ -19,11 +19,4 @@
 
 #pragma once
 
-#include <scontext.hpp>
-
-namespace alterstack
-{
-
-using Context = ::scontext::fcontext_t;
-
-}
+#include "alterstack/task.hpp"

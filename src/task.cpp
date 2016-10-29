@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Alexey Syrnikov <san@masterspline.net>
+ * Copyright 2015-2016 Alexey Syrnikov <san@masterspline.net>
  * 
  * This file is part of Alterstack.
  *
@@ -17,15 +17,15 @@
  * along with Alterstack.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#include "alterstack/task.h"
+#include "alterstack/task.hpp"
 
 #include <cstdlib>
 
 #include <thread>
 #include <stdexcept>
 
-#include "alterstack/scheduler.h"
-#include "alterstack/logger.h"
+#include "alterstack/scheduler.hpp"
+#include "alterstack/logger.hpp"
 
 namespace alterstack
 {

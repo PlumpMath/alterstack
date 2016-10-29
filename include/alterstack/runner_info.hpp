@@ -17,39 +17,56 @@
  * along with Alterstack.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#include "alterstack/stack.hpp"
+#pragma once
 
-#if defined(WITH_VALGRIND)
-#include <valgrind/valgrind.h>
-#endif
+#include <memory>
 
-#include <stdexcept>
-#include <cassert>
-
-#include <sys/mman.h>
+#include "futex.hpp"
+#include "task.hpp"
 
 namespace alterstack
 {
-Stack::Stack()
-    :m_size(1024*1024)
-{
-    m_base = ::mmap( 0, m_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    if ( m_base == MAP_FAILED ) throw std::bad_alloc();
 
-    int result = ::mprotect( m_base, 1, PROT_NONE);
-    assert( result == 0 );
-#if defined(WITH_VALGRIND)
-    m_valgrind_stack_id = VALGRIND_STACK_REGISTER( _stack_top(), m_stack_base);
-#endif
+enum class RunnerType
+{
+    NativeRunner,
+    BgRunner
+};
+
+class RunnerInfo
+{
+public:
+    RunnerInfo();
+
+    static RunnerInfo& current();
+    RunnerType type() const;
+    void set_type(RunnerType runner_type);
+
+    Task* current_task = nullptr;
+    Task  native_task;
+    Futex native_futex;
+    RunnerType m_type;
+};
+
+inline RunnerInfo::RunnerInfo()
+    :native_task( this )
+    ,m_type( RunnerType::NativeRunner )
+{}
+
+inline RunnerInfo& RunnerInfo::current()
+{
+    static thread_local RunnerInfo runner_info{};
+    return runner_info;
 }
 
-Stack::~Stack()
+inline RunnerType RunnerInfo::type() const
 {
-#if defined(WITH_VALGRIND)
-    VALGRIND_STACK_DEREGISTER( m_valgrind_stack_id );
-#endif
-    auto result = ::munmap( m_base, m_size);
-    assert( result == 0 );
+    return m_type;
+}
+
+inline void RunnerInfo::set_type(RunnerType runner_type)
+{
+    m_type = runner_type;
 }
 
 }

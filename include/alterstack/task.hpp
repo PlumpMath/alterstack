@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Alexey Syrnikov <san@masterspline.net>
+ * Copyright 2015-2016 Alexey Syrnikov <san@masterspline.net>
  * 
  * This file is part of Alterstack.
  *
@@ -23,11 +23,11 @@
 #include <cstdint>
 #include <memory>
 
-#include "awaitable.h"
+#include "awaitable.hpp"
 #include "TaskState.hpp"
-#include "scheduler.h"
-#include "stack.h"
-#include "context.h"
+#include "scheduler.hpp"
+#include "stack.hpp"
+#include "context.hpp"
 #include "task_buffer.hpp"
 #include "task_stack.hpp"
 #include "running_queue.hpp"

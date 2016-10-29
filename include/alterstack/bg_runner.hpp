@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Alexey Syrnikov <san@masterspline.net>
+ * Copyright 2015-2016 Alexey Syrnikov <san@masterspline.net>
  * 
  * This file is part of Alterstack.
  *
@@ -19,54 +19,34 @@
 
 #pragma once
 
+#include <atomic>
+#include <deque>
 #include <memory>
+#include <thread>
 
-#include "futex.h"
-#include "task.h"
+#include "bg_thread.hpp"
 
 namespace alterstack
 {
-
-enum class RunnerType
-{
-    NativeRunner,
-    BgRunner
-};
-
-class RunnerInfo
+class Scheduler;
+/**
+ * @brief Creates pool of threads which runs Task in background
+ */
+class BgRunner
 {
 public:
-    RunnerInfo();
+    BgRunner() = delete;
+    explicit BgRunner(
+            Scheduler* scheduler
+            ,uint32_t min_spare = 1
+            ,uint32_t max_running = std::thread::hardware_concurrency() );
+    ~BgRunner();
 
-    static RunnerInfo& current();
-    RunnerType type() const;
-    void set_type(RunnerType runner_type);
+    void notify_all();
+    void notify();
 
-    Task* current_task = nullptr;
-    Task  native_task;
-    Futex native_futex;
-    RunnerType m_type;
+private:
+    ::std::deque<std::unique_ptr<BgThread>> m_cpu_core_list;
 };
-
-inline RunnerInfo::RunnerInfo()
-    :native_task( this )
-    ,m_type( RunnerType::NativeRunner )
-{}
-
-inline RunnerInfo& RunnerInfo::current()
-{
-    static thread_local RunnerInfo runner_info{};
-    return runner_info;
-}
-
-inline RunnerType RunnerInfo::type() const
-{
-    return m_type;
-}
-
-inline void RunnerInfo::set_type(RunnerType runner_type)
-{
-    m_type = runner_type;
-}
 
 }
