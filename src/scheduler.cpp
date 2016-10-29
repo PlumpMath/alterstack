@@ -113,7 +113,7 @@ void Scheduler::switch_to(Task* new_task, TaskState old_task_state)
     }
     LOG << "Scheduler::switch_to old_task -> new_task(m_context): "
         << old_task << " -> " << new_task << " (" << new_task->m_context << ")\n";
-    RunnerInfo::current().current_task = new_task;
+    RunnerInfo::set_task( new_task );
 //    do not remember, why is this here
 //    while( new_task->m_context == nullptr )
 //    {
@@ -188,12 +188,11 @@ void Scheduler::post_switch_fixup(Task *prev_task)
  */
 Task *Scheduler::get_current_task()
 {
-    RunnerInfo& runner_info = RunnerInfo::current();
-    if ( runner_info.current_task == nullptr )
+    if ( RunnerInfo::current_task() == nullptr )
     {
-        runner_info.current_task = &runner_info.native_task;
+        RunnerInfo::set_task( RunnerInfo::native_task() );
     }
-    return runner_info.current_task;
+    return RunnerInfo::current_task();
 }
 /**
  * @brief get Native Task pointer (create Task instance if does not exist)
@@ -201,7 +200,7 @@ Task *Scheduler::get_current_task()
  */
 Task* Scheduler::get_native_task()
 {
-    return &RunnerInfo::current().native_task;
+    return RunnerInfo::native_task();
 }
 /**
  * @brief switch to new task or wait because current task is waiting
@@ -235,7 +234,7 @@ void Scheduler::do_schedule_waiting_task()
         // but if not we will switch to native without storing it running queue
         if( !switched )
         {
-            switch_to( &RunnerInfo::current().native_task, TaskState::Waiting );
+            switch_to( RunnerInfo::native_task(), TaskState::Waiting );
         }
         return;
     }
@@ -262,10 +261,10 @@ Task* Scheduler::get_next_from_queue() noexcept
  */
 Task* Scheduler::get_next_from_native()
 {
-    if( RunnerInfo::current().native_task.m_state == TaskState::Running )
+    if( RunnerInfo::native_task()->m_state == TaskState::Running )
     {
         LOG << "Scheduler::_get_next_from_native: got native task\n";
-        return &RunnerInfo::current().native_task;
+        return RunnerInfo::native_task();
     }
     return nullptr;
 }
@@ -296,7 +295,7 @@ Task *Scheduler::get_next_task()
     }
     else
     {
-        if( RunnerInfo::current().type() == RunnerType::NativeRunner )
+        if( RunnerInfo::type() == RunnerType::NativeRunner )
             // Native thread running on AlterStack
         {
             LOG << "Scheduler::_get_next_task: in AlterNative\n";

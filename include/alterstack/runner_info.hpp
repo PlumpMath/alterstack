@@ -39,17 +39,21 @@ public:
     RunnerInfo();
 
     static RunnerInfo& current();
-    RunnerType type() const;
-    void set_type(RunnerType runner_type);
+    static RunnerType  type();
+    static void  set_type(RunnerType runner_type);
+    static Task* current_task();
+    static void  set_task( Task* new_task );
+    static Task* native_task();
 
-    Task* current_task = nullptr;
-    Task  native_task;
     Futex native_futex;
+private:
+    Task  m_native_task;
+    Task* m_current_task = nullptr;
     RunnerType m_type;
 };
 
 inline RunnerInfo::RunnerInfo()
-    :native_task( this )
+    :m_native_task( this )
     ,m_type( RunnerType::NativeRunner )
 {}
 
@@ -59,14 +63,29 @@ inline RunnerInfo& RunnerInfo::current()
     return runner_info;
 }
 
-inline RunnerType RunnerInfo::type() const
+inline RunnerType RunnerInfo::type()
 {
-    return m_type;
+    return current().m_type;
 }
 
 inline void RunnerInfo::set_type(RunnerType runner_type)
 {
-    m_type = runner_type;
+    current().m_type = runner_type;
+}
+
+inline Task *RunnerInfo::current_task()
+{
+    return current().m_current_task;
+}
+
+inline void RunnerInfo::set_task(Task *new_task)
+{
+    current().m_current_task = new_task;
+}
+
+inline Task *RunnerInfo::native_task()
+{
+    return &current().m_native_task;
 }
 
 }

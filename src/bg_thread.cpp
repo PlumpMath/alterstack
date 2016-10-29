@@ -34,7 +34,7 @@ namespace alterstack
 void BgThread::thread_function()
 {
     AtomicReturnBoolGuard thread_stopped_guard(m_thread_stopped);
-    RunnerInfo::current().set_type( RunnerType::BgRunner );
+    RunnerInfo::set_type( RunnerType::BgRunner );
 
     os::set_thread_name();
 
