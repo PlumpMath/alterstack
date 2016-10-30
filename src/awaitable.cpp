@@ -129,20 +129,7 @@ void Awaitable::release()
         Task* task = next_task;
         // after wakeing up task can be deleted before next iteration in this loop
         next_task = next_task->next_;
-        if( task->is_native() )
-        {
-            LOG << "Awaitable::release: task " << task <<
-                   " is Native, marking Ready and notifying\n";
-            task->m_state = TaskState::Running;
-            task->m_native_info->native_futex.notify();
-        }
-        else // AlterNative or BgRunner
-        {
-            LOG << "Awaitable::release: task " << task <<
-                   " is AlterNative, enqueueing in running queue\n";
-            task->m_state = TaskState::Running;
-            Scheduler::enqueue_task(task);
-        }
+        Scheduler::add_running_task( task );
     }
 }
 

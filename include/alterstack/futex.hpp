@@ -83,7 +83,7 @@ public:
     ~Futex() = default;
 
     void wait();
-    void notify(int32_t count = 1);
+    void notify(int32_t count = 1) noexcept;
     void notify_all();
 
 private:
@@ -123,7 +123,7 @@ inline void Futex::wait()
  * if no threads is waiting this function just read two variables
  * @param count how many threads to wake up (default 1)
  */
-inline void Futex::notify(int32_t count)
+inline void Futex::notify(int32_t count) noexcept
 {
     if( m_work_avalable.load(std::memory_order_acquire) == 0 )
     {

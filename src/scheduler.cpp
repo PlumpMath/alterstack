@@ -179,7 +179,7 @@ void Scheduler::post_switch_fixup(Task *prev_task)
             && prev_task->m_state == TaskState::Running )
     {
         LOG << "Scheduler::post_switch_fixup: enqueueing old task\n";
-        enqueue_task(prev_task);
+        enqueue_alternative_task(prev_task);
     }
 }
 /**
@@ -273,12 +273,14 @@ Task* Scheduler::get_next_from_native()
  * @param task task to store
  * get_next_from_native() is threadsafe
  */
-void Scheduler::enqueue_task(Task *task) noexcept
+void Scheduler::enqueue_alternative_task(Task *task) noexcept
 {
     assert(task != nullptr);
-    instance().running_queue_.put_task(task);
-    LOG << "Scheduler::enqueue_task: task " << task << " stored in running task queue\n";
-    instance().bg_runner_.notify();
+    auto& scheduler = instance();
+    scheduler.running_queue_.put_task(task);
+    LOG << "Scheduler::enqueue_alternative_task: task " << task
+        << " stored in running task queue\n";
+    scheduler.bg_runner_.notify();
 }
 /**
  * @brief get next Task* to run using schedule algorithm of Scheduler
@@ -313,6 +315,29 @@ Task *Scheduler::get_next_task()
         }
     }
     return nullptr;
+}
+
+/**
+ * @brief make task (Native and AlterNative) running and schedule it to execution
+ *
+ * task must NOT be in any queue (because of multithreading)
+ * @param task pointer to running Task
+ */
+void Scheduler::add_running_task( Task* task ) noexcept
+{
+    task->m_state = TaskState::Running;
+    if( task->is_native() )
+    {
+        LOG << "Scheduler::enqueue_running_task: task " << task <<
+               " is Native, marking Ready and notifying\n";
+        task->m_native_info->native_futex.notify();
+    }
+    else // AlterNative or BgRunner
+    {
+        LOG << "Scheduler::enqueue_running_task: task " << task <<
+               " is AlterNative, enqueueing in running queue\n";
+        Scheduler::enqueue_alternative_task(task);
+    }
 }
 
 }

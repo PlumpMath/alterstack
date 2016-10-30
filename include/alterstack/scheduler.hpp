@@ -76,13 +76,16 @@ private:
 
     Task* get_next_from_queue() noexcept;
     static Task* get_next_from_native();
-    static void  enqueue_task(Task* task) noexcept;
     static Task* get_current_task();
     static Task* get_native_task();
     static Task* get_next_task();
 
     BgRunner bg_runner_;
     RunningQueue<Task> running_queue_;
+public:
+    static void  add_running_task(Task* task) noexcept;
+private:
+    static void  enqueue_alternative_task(Task* task) noexcept;
 };
 
 /**
