@@ -29,7 +29,6 @@
 #include "running_queue.hpp"
 #include "awaitable.hpp"
 #include "context.hpp"
-#include "stack.hpp"
 #include "task.hpp"
 #include "bg_runner.hpp"
 #include "logger.hpp"

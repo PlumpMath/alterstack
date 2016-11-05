@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Alexey Syrnikov <san@masterspline.net>
+ * Copyright 2015-2016 Alexey Syrnikov <san@masterspline.net>
  * 
  * This file is part of Alterstack.
  *
@@ -29,23 +29,10 @@ namespace alterstack
 class Stack
 {
 public:
-    /**
-     * @brief allocates memory for stack, protect last page to prevent overflow
-     */
     Stack();
-    /**
-     * @brief deallocates memory used by stack
-     */
     ~Stack();
-    /**
-     * @brief address for empty stack pointer
-     * @return stack top - StackPointer address for empty stack (max address for x86)
-     */
+
     void* stack_top() const noexcept;
-    /**
-     * @brief stack size
-     * @return memory size allocated for stack
-     */
     size_t size() const noexcept;
 
 private:
@@ -55,17 +42,21 @@ private:
     unsigned m_valgrind_stack_id;
 #endif
 };
-
+/**
+ * @brief address for empty stack pointer
+ * @return stack top - StackPointer address for empty stack (max address for x86)
+ */
 inline void* Stack::stack_top() const noexcept
 {
     return reinterpret_cast<char*>(m_base)+m_size;
 }
-
+/**
+ * @brief stack size
+ * @return memory size allocated for stack
+ */
 inline size_t Stack::size() const noexcept
 {
     return m_size;
 }
-//#include <signal.h>
-// min_stack_size    SIGSTKSZ;
 
 }

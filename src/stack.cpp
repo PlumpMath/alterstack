@@ -30,6 +30,9 @@
 
 namespace alterstack
 {
+/**
+ * @brief allocates memory for stack, protect last page to prevent overflow
+ */
 Stack::Stack()
     :m_size(1024*1024)
 {
@@ -42,7 +45,9 @@ Stack::Stack()
     m_valgrind_stack_id = VALGRIND_STACK_REGISTER( _stack_top(), m_stack_base);
 #endif
 }
-
+/**
+ * @brief deallocates memory used by stack
+ */
 Stack::~Stack()
 {
 #if defined(WITH_VALGRIND)
