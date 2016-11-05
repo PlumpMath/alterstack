@@ -24,7 +24,7 @@ set(alterstack_SRCS
     src/task.cpp
 )
 
-add_definitions(-std=c++11 -Wall -pedantic -mtune=native -march=native -pthread)
+add_definitions( -std=c++14 -Wall -pedantic -mtune=native -march=native )
 #add_definitions(-std=c++11 -Wall -pedantic -mtune=native -march=native -pthread -g -fsanitize=address -fno-omit-frame-pointer)
 
 add_library(alterstack STATIC ${alterstack_SRCS})
