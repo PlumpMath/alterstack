@@ -19,13 +19,6 @@
 
 #pragma once
 
-#include <mutex>
-#include <deque>
-#include <atomic>
-#include <cstdint>
-#include <cassert>
-#include <condition_variable>
-
 #include "running_queue.hpp"
 #include "awaitable.hpp"
 #include "context.hpp"

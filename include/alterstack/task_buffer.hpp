@@ -95,7 +95,7 @@ public:
 template<typename Task>
 TaskBuffer<Task>::TaskBuffer() noexcept
 {
-    std::fill(std::begin(buffer_), std::end(buffer_), nullptr);
+    std::fill(buffer_, buffer_+buffer_size_, nullptr);
     get_position_.store(0, std::memory_order_relaxed);
     put_position_.store(0, std::memory_order_relaxed);
 }
