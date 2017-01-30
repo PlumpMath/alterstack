@@ -1,4 +1,4 @@
-project(alterstack)
+project( alterstack )
 cmake_minimum_required(VERSION 3.1)
 
 option( ALTERSTACK_USE_JEMALLOC "Link with jemalloc" OFF )
