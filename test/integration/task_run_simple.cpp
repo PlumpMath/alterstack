@@ -1,6 +1,6 @@
 /*
- * Copyright 2015-2016 Alexey Syrnikov <san@masterspline.net>
- * 
+ * Copyright 2015-2017 Alexey Syrnikov <san@masterspline.net>
+ *
  * This file is part of Alterstack.
  *
  * Alterstack is free software: you can redistribute it and/or modify
@@ -19,54 +19,22 @@
 
 #include "alterstack/api.hpp"
 
-#include <functional>
 #include <iostream>
 
 using alterstack::Task;
 
 void ctx_function()
 {
-    std::cout << "Context function, single part\n";
-}
-
-void ctx_function2()
-{
-    std::cout << "Context function2, first part\n";
-    Task::yield();
-    std::cout << "Context function2, second part\n";
-}
-
-void ctx_arg1(int data)
-{
-    std::cout << "Context function arg " << data << "\n";
+    std::cout << "Context function, first part\n";
 }
 
 int main()
 {
     Task task;
-    task.run( ctx_function );
+    task.run(ctx_function);
     Task task2;
     int x = 11;
     task2.run([x]{std::cout << "Hello from lambda: x = " << x << "\n";});
-    Task con_task2;
-    con_task2.run(ctx_function);
-    Task con_task3;
-    con_task3.run(ctx_function);
-    Task con_task4;
-    con_task4.run(ctx_function);
-
-    Task con_task10;
-    con_task10.run(ctx_function2);
-    std::cout << "Returned to fcm after run\n";
-    con_task10.wait();
-    Task con_task11;
-    con_task11.run(::std::bind(ctx_arg1, 0));
-    Task con_task12;
-    con_task12.run(::std::bind(ctx_arg1, 11));
-
-    Task::yield();
-    std::cout << "Returned to main\n";
-    con_task2.wait();
     return 0;
 }
 

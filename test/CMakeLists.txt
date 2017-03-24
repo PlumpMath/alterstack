@@ -1,39 +1,14 @@
 project( alterstack_tests )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-set(COMMON_LIBS ${COMMON_LIBS} -latomic)
 
 if( ALTERSTACK_USE_JEMALLOC )
     set( COMMON_LIBS ${COMMON_LIBS} -ljemalloc )
 endif()
 
-add_executable( task_run_simple
-    task_run_simple.cpp
-)
-target_link_libraries( task_run_simple alterstack ${COMMON_LIBS} Threads::Threads)
+add_subdirectory( integration )
 
-add_test( task_run_simple task_run_simple )
-
-add_executable( task_run
-    task_run.cpp
-)
-target_link_libraries( task_run alterstack ${COMMON_LIBS} Threads::Threads )
-
-add_test( task_run task_run )
-
-add_executable( task_wait
-    task_wait.cpp
-)
-target_link_libraries( task_wait alterstack ${COMMON_LIBS} Threads::Threads )
-
-add_test( task_wait task_wait )
-
-add_executable( task_yield
-    task_yield.cpp
-)
-target_link_libraries( task_yield alterstack ${COMMON_LIBS} Threads::Threads )
-
-add_test( task_yield task_yield )
+set(COMMON_LIBS ${COMMON_LIBS} -latomic)
 
 #add_executable(test_gai
 #    TestGai.cpp

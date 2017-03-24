@@ -1,6 +1,6 @@
 /*
- * Copyright 2015-2016 Alexey Syrnikov <san@masterspline.net>
- * 
+ * Copyright 2015-2017 Alexey Syrnikov <san@masterspline.net>
+ *
  * This file is part of Alterstack.
  *
  * Alterstack is free software: you can redistribute it and/or modify

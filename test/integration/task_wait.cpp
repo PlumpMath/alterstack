@@ -1,6 +1,6 @@
 /*
- * Copyright 2015-2016 Alexey Syrnikov <san@masterspline.net>
- * 
+ * Copyright 2015-2017 Alexey Syrnikov <san@masterspline.net>
+ *
  * This file is part of Alterstack.
  *
  * Alterstack is free software: you can redistribute it and/or modify
@@ -23,18 +23,21 @@
 
 using alterstack::Task;
 
-void ctx_function()
+alterstack::Awaitable aw;
+
+void ctx_function2()
 {
-    std::cout << "Context function, first part\n";
+    std::cout << "Context function2, first part\n";
+    Task::yield();
+    std::cout << "Context function2, second part\n";
+    aw.release();
 }
 
 int main()
 {
     Task task;
-    task.run(ctx_function);
-    Task task2;
-    int x = 11;
-    task2.run([x]{std::cout << "Hello from lambda: x = " << x << "\n";});
+    task.run(ctx_function2);
+    aw.wait();
     return 0;
 }
 
