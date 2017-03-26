@@ -5,10 +5,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 if( ALTERSTACK_USE_JEMALLOC )
     set( COMMON_LIBS ${COMMON_LIBS} -ljemalloc )
 endif()
+set(COMMON_LIBS ${COMMON_LIBS} -latomic)
 
 add_subdirectory( integration )
-
-set(COMMON_LIBS ${COMMON_LIBS} -latomic)
 
 #add_executable(test_gai
 #    TestGai.cpp
