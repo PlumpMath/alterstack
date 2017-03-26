@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 Alexey Syrnikov <san@masterspline.net>
+ * Copyright 2015-2017 Alexey Syrnikov <san@masterspline.net>
  * 
  * This file is part of Alterstack.
  *
@@ -44,8 +44,8 @@ class RunnerInfo;
 class Task
 {
 public:
-    Task(); // will create AlterNative Task
-    explicit Task(RunnerInfo *native_info); // wil lcreate create Native Task
+    Task(); ///< will create unbound Task
+    explicit Task(RunnerInfo *native_info); ///< will create create thread bound Task
     ~Task();
 
     Task(const Task&) = delete;
