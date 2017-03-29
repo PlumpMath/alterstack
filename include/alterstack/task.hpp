@@ -22,6 +22,7 @@
 #include <functional>
 #include <cstdint>
 #include <memory>
+#include <atomic>
 
 #include "awaitable.hpp"
 #include "TaskState.hpp"
@@ -39,7 +40,6 @@ class RunnerInfo;
  * @brief Main class to start and wait tasks.
  *
  * Details see on Main Page in section @ref task_section.
- *
  */
 class Task
 {
@@ -60,14 +60,6 @@ public:
     void release();
 
 private:
-    friend class Scheduler;
-    friend class Awaitable; // for manipulating m_next intrusive list pointer
-    friend class TaskBuffer<Task>;
-    friend class TaskStack<Task>;
-    friend class RunningQueue<Task>;
-    friend class UnitTestAccessor;
-    friend class BgRunner;
-
     /**
      * @brief helper function to start Task's runnable object and clean when it's finished
      * @param task_ptr pointer to Task instance
@@ -81,10 +73,18 @@ private:
     Context    m_context;
 
     RunnerInfo* const m_native_info;
-    TaskState   m_state; // FIXME: make it atomic
+    std::atomic<TaskState>  m_state;
 
     std::unique_ptr<Stack>  m_stack;
     ::std::function<void()> m_runnable;
+private:
+    friend class Scheduler;
+    friend class Awaitable; // for manipulating m_next intrusive list pointer
+    friend class TaskBuffer<Task>;
+    friend class TaskStack<Task>;
+    friend class RunningQueue<Task>;
+    friend class UnitTestAccessor;
+    friend class BgRunner;
 };
 
 /**
