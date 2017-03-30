@@ -44,17 +44,16 @@ class RunnerInfo;
 class Task
 {
 public:
-    Task(); ///< will create unbound Task
+    Task( ::std::function<void()> runnable ); ///< will create unbound Task
     explicit Task(RunnerInfo *native_info); ///< will create create thread bound Task
     ~Task();
 
+    Task() = delete;
     Task(const Task&) = delete;
     Task(Task&&)      = delete;
     Task& operator=(const Task&) = delete;
     Task& operator=(Task&&)      = delete;
 
-    void set_function();
-    void run(::std::function<void()> runnable);
     static void yield();
     void wait();
     void release();
@@ -66,7 +65,7 @@ private:
      */
     [[noreturn]]
     static void _run_wrapper( ::scontext::transfer_t transfer ) noexcept;
-    bool is_native() noexcept;
+    bool is_thread_bound() noexcept;
 
     Awaitable  awaitable_;
     Task*      next_ = nullptr;
@@ -97,7 +96,7 @@ inline void Task::release()
     awaitable_.release();
 }
 
-inline bool Task::is_native() noexcept
+inline bool Task::is_thread_bound() noexcept
 {
     return m_native_info != nullptr;
 }

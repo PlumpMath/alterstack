@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 Alexey Syrnikov <san@masterspline.net>
+ * Copyright 2015-2017 Alexey Syrnikov <san@masterspline.net>
  * 
  * This file is part of Alterstack.
  *
@@ -34,12 +34,20 @@ namespace ctx = ::scontext;
 
 /**
  * @brief constructor to create AlterNative Task
+ * @param runnable void() function or functor to start
  */
-Task::Task()
-    :m_native_info(nullptr)
-    ,m_state(TaskState::Created)
-    ,m_stack(new Stack())
-{}
+Task::Task( ::std::function<void()> runnable )
+    :m_native_info{ nullptr }
+    ,m_state{ TaskState::Running }
+    ,m_stack{ new Stack() }
+    ,m_runnable{ std::move(runnable) }
+{
+    LOG << "Task::Task\n";
+    m_context = ctx::make_fcontext( m_stack->stack_top(), m_stack->size(), _run_wrapper);
+    LOG << "Task::Task: m_context " << m_context << "\n";
+
+    Scheduler::run_new_task( this );
+}
 /**
  * @brief constructor to create Native Task
  *
@@ -56,46 +64,20 @@ Task::Task(RunnerInfo* native_info)
 Task::~Task()
 {
     LOG << "Task::~Task: " << this << "\n";
-    if( is_native() ) // AlterNative Task marked Created in _run_wrapper()
+    if( is_thread_bound() ) // AlterNative Task marked Created in _run_wrapper()
     {
-        m_state = TaskState::Created;
+        m_state = TaskState::Finished;
     }
     wait();
-    while( m_state != TaskState::Created )
+    while( m_state != TaskState::Finished )
     {
         yield();
-        if( m_state != TaskState::Created )
+        if( m_state != TaskState::Finished )
         {
             ::std::this_thread::yield();
         }
     }
 }
-/**
- * @brief temporary function (HACK)
- *
- * will be removed or modified when any runnable can be started by Task
- */
-void Task::set_function() // FIXME: this hack will be fixed with extending runnable types
-{
-    m_context = ctx::make_fcontext( m_stack->stack_top(), m_stack->size(), _run_wrapper);
-    LOG << "Task::set_function(): m_context " << m_context << "\n";
-}
-/**
- * @brief starts executing Task
- * @param runnable void() function or functor to start
- */
-void Task::run( ::std::function<void()> runnable )
-{
-    LOG << "Task::run\n";
-    if( m_state != TaskState::Created)
-        throw std::logic_error("Task still running");
-
-    m_state = TaskState::Running;
-    m_runnable = runnable;
-
-    Scheduler::schedule_new_task( this );
-}
-
 /**
  * @brief yield current Task, schedule next (if avalable), current stay running
  */
@@ -111,8 +93,7 @@ void Task::yield()
  */
 void Task::wait()
 {
-    if( m_state == TaskState::Created
-            || m_state == TaskState::Finished )
+    if( m_state == TaskState::Finished )
     {
         LOG << "Task::wait: Task finished, nothing to wait\n";
         return;
@@ -150,7 +131,6 @@ void Task::_run_wrapper( ::scontext::transfer_t transfer ) noexcept
             {
                 next_task = Scheduler::get_native_task();
             }
-            current->m_state = TaskState::Created;
             assert(next_task != nullptr);
         }
         Scheduler::switch_to(next_task, TaskState::Finished); // exactly Finished

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 Alexey Syrnikov <san@masterspline.net>
+ * Copyright 2015-2017 Alexey Syrnikov <san@masterspline.net>
  * 
  * This file is part of Alterstack.
  *
@@ -72,14 +72,13 @@ bool Scheduler::do_schedule(bool old_stay_running)
  * @brief switch OS thread to newly created Task, current task stay Running
  * @param task new task to run
  */
-void Scheduler::schedule_new_task( Task* task )
+void Scheduler::run_new_task( Task* task )
 {
     instance().do_schedule_new_task(task);
 }
 
 void Scheduler::do_schedule_new_task( Task* task )
 {
-    task->set_function(); // FIXME: this hack will be fixed with extending runnable types
     switch_to(task);
 }
 /**
@@ -175,7 +174,7 @@ void Scheduler::post_switch_fixup(Task *prev_task)
         LOG << "Scheduler::post_switch_fixup: old_task == nullptr, do nothing\n";
         return;
     }
-    if( !prev_task->is_native() // AlterNative
+    if( !prev_task->is_thread_bound() // AlterNative
             && prev_task->m_state == TaskState::Running )
     {
         LOG << "Scheduler::post_switch_fixup: enqueueing old task\n";
@@ -220,7 +219,7 @@ void Scheduler::do_schedule_waiting_task()
     bool switched = schedule(false);
     // Nothing to schedule or waiting finished
     Task* current_task = get_current_task();
-    if( current_task->is_native() )
+    if( current_task->is_thread_bound() )
     {
         while(current_task->m_state == TaskState::Waiting)
         {
@@ -290,7 +289,7 @@ Task *Scheduler::get_next_task()
 {
     Task* current = get_current_task();
     Task* next_task = nullptr;
-    if( current->is_native() ) // Native thread in Native code calls yield()
+    if( current->is_thread_bound() ) // Native thread in Native code calls yield()
     {
         LOG << "Scheduler::get_next_task: in Native\n";
         return instance().get_next_from_queue();
@@ -326,7 +325,7 @@ Task *Scheduler::get_next_task()
 void Scheduler::add_running_task( Task* task ) noexcept
 {
     task->m_state = TaskState::Running;
-    if( task->is_native() )
+    if( task->is_thread_bound() )
     {
         LOG << "Scheduler::enqueue_running_task: task " << task <<
                " is Native, marking Ready and notifying\n";

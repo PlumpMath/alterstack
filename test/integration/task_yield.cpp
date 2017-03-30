@@ -33,10 +33,8 @@ void ctx_function2()
 int main()
 {
     Task::yield();
-    Task task;
-    task.run(ctx_function2);
-    Task task2;
-    task2.run(ctx_function2);
+    Task task1{ ctx_function2 };
+    Task task2{ ctx_function2 };
     return 0;
 }
 

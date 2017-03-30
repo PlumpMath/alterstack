@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 Alexey Syrnikov <san@masterspline.net>
+ * Copyright 2015-2017 Alexey Syrnikov <san@masterspline.net>
  * 
  * This file is part of Alterstack.
  *
@@ -49,17 +49,12 @@ private:
 public:
 
     static bool schedule(bool old_stay_running=true);
-    static void schedule_new_task(Task *task);
+    static void run_new_task(Task *task);
     static void schedule_waiting_task();
     static void switch_to(Task* new_task, TaskState old_task_state=TaskState::Running);
     static void post_switch_fixup(Task *old_task);
 
 private:
-    friend class Task;
-    friend class Awaitable;
-    friend class BgRunner;
-    friend class BgThread;
-
     bool do_schedule(bool old_stay_running);
     void do_schedule_new_task(Task *task);
     void do_schedule_waiting_task();
@@ -78,6 +73,11 @@ public:
     static void  add_running_task(Task* task) noexcept;
 private:
     static void  enqueue_alternative_task(Task* task) noexcept;
+private:
+    friend class Task;
+    friend class Awaitable;
+    friend class BgRunner;
+    friend class BgThread;
 };
 
 /**

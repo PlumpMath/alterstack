@@ -30,11 +30,10 @@ void ctx_function()
 
 int main()
 {
-    Task task;
-    task.run(ctx_function);
-    Task task2;
+    Task task{ ctx_function };
+
     int x = 11;
-    task2.run([x]{std::cout << "Hello from lambda: x = " << x << "\n";});
+    Task task2{ [x]{std::cout << "Hello from lambda: x = " << x << "\n";} };
     return 0;
 }
 

@@ -43,26 +43,19 @@ void ctx_arg1(int data)
 
 int main()
 {
-    Task task;
-    task.run( ctx_function );
-    Task task2;
-    int x = 11;
-    task2.run([x]{std::cout << "Hello from lambda: x = " << x << "\n";});
-    Task con_task2;
-    con_task2.run(ctx_function);
-    Task con_task3;
-    con_task3.run(ctx_function);
-    Task con_task4;
-    con_task4.run(ctx_function);
+    Task task{ ctx_function };
 
-    Task con_task10;
-    con_task10.run(ctx_function2);
+    int x = 11;
+    Task task2{ [x]{std::cout << "Hello from lambda: x = " << x << "\n";} };
+    Task con_task2{ ctx_function };
+    Task con_task3{ ctx_function };
+    Task con_task4{ ctx_function };
+
+    Task con_task10{ ctx_function2 };
     std::cout << "Returned to fcm after run\n";
     con_task10.wait();
-    Task con_task11;
-    con_task11.run(::std::bind(ctx_arg1, 0));
-    Task con_task12;
-    con_task12.run(::std::bind(ctx_arg1, 11));
+    Task con_task11{ ::std::bind(ctx_arg1, 0) };
+    Task con_task12{ ::std::bind(ctx_arg1, 11) };
 
     Task::yield();
     std::cout << "Returned to main\n";

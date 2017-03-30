@@ -35,8 +35,7 @@ void ctx_function2()
 
 int main()
 {
-    Task task;
-    task.run(ctx_function2);
+    Task task{ ctx_function2 };
     aw.wait();
     return 0;
 }
