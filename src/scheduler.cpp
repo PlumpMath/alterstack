@@ -64,8 +64,12 @@ bool Scheduler::do_schedule(bool old_stay_running)
         LOG << "Scheduler::schedule: nowhere to switch, do nothing\n";
         return false;
     }
-    switch_to(next_task
-              ,old_stay_running ? TaskState::Running : TaskState::Waiting);
+    Task* old_task = get_current_task();
+    if( old_stay_running )
+        old_task->m_state = TaskState::Running;
+    else
+        old_task->m_state = TaskState::Waiting;
+    switch_to( next_task );
     return true;
 }
 /**
@@ -97,78 +101,49 @@ void Scheduler::do_schedule_new_task( Task* task )
  * 2. store old task in running queue if old still running
  * Last step done in post_switch_fixup() which is part of switch_to().
  */
-void Scheduler::switch_to(Task* new_task, TaskState old_task_state)
+void Scheduler::switch_to( Task* new_task )
 {
     LOG << "Scheduler::switch_to\n";
-    Task* old_task;
-    switch( old_task_state )
-    {
-    case TaskState::Running:
-    case TaskState::Waiting:
-        old_task = get_current_task();
-        break;
-    default:
-        old_task = nullptr;
-    }
+    Task* old_task = get_current_task();
     LOG << "Scheduler::switch_to old_task -> new_task(m_context): "
         << old_task << " -> " << new_task << " (" << new_task->m_context << ")\n";
     RunnerInfo::set_task( new_task );
-//    do not remember, why is this here
-//    while( new_task->m_context == nullptr )
-//    {
-//        ::std::this_thread::yield();
-//    }
-    Task* prev_task;
-    switch( old_task_state )
-    {
-    case TaskState::Running:
-    case TaskState::Waiting:
-    { // FIXME: check logick for this method
-        ::scontext::transfer_t transfer = ::scontext::jump_fcontext(
-                    new_task->m_context
-                    ,(void*)old_task);
-        // as result for previous switch some new contexts will work
-        // and after that I will come back in this context exactly in
-        // it's state before jump (so old context become current again
-        // And it will be Running as before and because someone switched to us -
-        // no reason to switch to Waiting context)
-        // Here exist 3 contexts:
-        // old - is context I switching from
-        // new - is context I switched to
-        // prev - is context I came back from (after new context, and other
-        // did it's work)
-        prev_task = (Task*)transfer.data;
-        if( prev_task != nullptr )
-        {
-            prev_task->m_context = transfer.fctx;
-            LOG << "Scheduler::switch_to saved prev_task m_context " << transfer.fctx << "\n";
-        }
-        break;
-    }
-    default:
-    {
-        ::scontext::transfer_t transfer = ::scontext::jump_fcontext(
-                    new_task->m_context
-                    ,nullptr);
-        prev_task = (Task*)transfer.data;
-        if( prev_task != nullptr )
-        {
-            prev_task->m_context = transfer.fctx;
-            LOG << "Scheduler::switch_to saved prev_task m_context " << transfer.fctx << "\n";
-        }
-        break;
-    }
-    }
+    ::scontext::transfer_t transfer = ::scontext::jump_fcontext(
+                new_task->m_context
+                ,(void*)old_task );
+    // as result for jump_fcontext some new contexts will work
+    // and after that control will come back in this context exactly in
+    // it's state before jump (so old context become current again
+    // And it will be Running as before and because someone switched to us -
+    // no reason to switch to Waiting context)
+    // Here exist 3 contexts:
+    // old - is context I switching from
+    // new - is context I switched to
+    // prev - is context I came back from (after new context, and other
+    // did it's work)
 
-    post_switch_fixup(prev_task);
+    post_jump_fcontext( transfer );
 }
 /**
  * @brief store old task in running queue, if it is not nullptr and is AlterNative
  * @param old_task task to store
  */
-void Scheduler::post_switch_fixup(Task *prev_task)
+void Scheduler::post_jump_fcontext( ::scontext::transfer_t transfer )
 {
     LOG << "Scheduler::post_switch_fixup\n";
+
+    Task* prev_task = (Task*)transfer.data;
+    if( prev_task->m_state.load( std::memory_order_relaxed ) == TaskState::Clearing )
+    {
+        prev_task->m_state.store( TaskState::Finished, std::memory_order_release );
+        LOG << "Scheduler::switch_to prev::m_state = Finished\n";
+    }
+    else
+    {
+        prev_task->m_context = transfer.fctx;
+        LOG << "Scheduler::switch_to saved prev_task m_context " << transfer.fctx << "\n";
+    }
+
     if( prev_task == nullptr )
     {
         LOG << "Scheduler::post_switch_fixup: old_task == nullptr, do nothing\n";
@@ -233,7 +208,7 @@ void Scheduler::do_schedule_waiting_task()
         // but if not we will switch to native without storing it running queue
         if( !switched )
         {
-            switch_to( RunnerInfo::native_task(), TaskState::Waiting );
+            switch_to( RunnerInfo::native_task() );
         }
         return;
     }

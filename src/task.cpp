@@ -109,21 +109,13 @@ void Task::_run_wrapper( ::scontext::transfer_t transfer ) noexcept
         Task* next_task;
         {
             LOG << "Task::_run_wrapper: started\n";
-            // FIXME: check this logic, old context missed
-            Task* prev_task = reinterpret_cast<Task*>(transfer.data);
-            if( prev_task != nullptr )
-            {
-                prev_task->m_context = transfer.fctx;
-                LOG << "Task::_run_wrapper saved prev_task m_context " << transfer.fctx << "\n";
-            }
-            Scheduler::post_switch_fixup(prev_task);
+            Scheduler::post_jump_fcontext( transfer );
 
             Task* current = Scheduler::get_current_task();
             current->m_runnable();
             LOG << "Task::_run_wrapper: runnable finished, cleaning Task\n";
-
-            current->m_state = TaskState::Finished;
             current->release();
+            current->m_state.store( TaskState::Clearing, std::memory_order_relaxed );
 
             // _run_wrapper() used only in AlterNative(BgRunner) Task
             next_task = Scheduler::get_next_task();
@@ -132,8 +124,9 @@ void Task::_run_wrapper( ::scontext::transfer_t transfer ) noexcept
                 next_task = Scheduler::get_native_task();
             }
             assert(next_task != nullptr);
-        }
-        Scheduler::switch_to(next_task, TaskState::Finished); // exactly Finished
+        } // here all local objects NUST be destroyed because switch_to() will not return
+
+        Scheduler::switch_to( next_task );
 
         // This line is unreachable,
         // because current context will never scheduled

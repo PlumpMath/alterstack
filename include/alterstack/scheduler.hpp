@@ -51,8 +51,8 @@ public:
     static bool schedule(bool old_stay_running=true);
     static void run_new_task(Task *task);
     static void schedule_waiting_task();
-    static void switch_to(Task* new_task, TaskState old_task_state=TaskState::Running);
-    static void post_switch_fixup(Task *old_task);
+    static void switch_to(Task* new_task );
+    static void post_jump_fcontext( ::scontext::transfer_t transfer );
 
 private:
     bool do_schedule(bool old_stay_running);
