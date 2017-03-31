@@ -66,13 +66,13 @@ Task::~Task()
     LOG << "Task::~Task: " << this << "\n";
     if( is_thread_bound() ) // AlterNative Task marked Created in _run_wrapper()
     {
-        m_state = TaskState::Finished;
+        m_state = TaskState::Clear;
     }
     wait();
-    while( m_state != TaskState::Finished )
+    while( m_state != TaskState::Clear )
     {
         yield();
-        if( m_state != TaskState::Finished )
+        if( m_state != TaskState::Clear )
         {
             ::std::this_thread::yield();
         }
@@ -93,7 +93,7 @@ void Task::yield()
  */
 void Task::wait()
 {
-    if( m_state == TaskState::Finished )
+    if( m_state == TaskState::Clear )
     {
         LOG << "Task::wait: Task finished, nothing to wait\n";
         return;
@@ -115,7 +115,7 @@ void Task::_run_wrapper( ::scontext::transfer_t transfer ) noexcept
             current->m_runnable();
             LOG << "Task::_run_wrapper: runnable finished, cleaning Task\n";
             current->release();
-            current->m_state.store( TaskState::Clearing, std::memory_order_relaxed );
+            current->m_state.store( TaskState::Finished, std::memory_order_relaxed );
 
             // _run_wrapper() used only in AlterNative(BgRunner) Task
             next_task = Scheduler::get_next_task();

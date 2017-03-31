@@ -133,9 +133,9 @@ void Scheduler::post_jump_fcontext( ::scontext::transfer_t transfer )
     LOG << "Scheduler::post_switch_fixup\n";
 
     Task* prev_task = (Task*)transfer.data;
-    if( prev_task->m_state.load( std::memory_order_relaxed ) == TaskState::Clearing )
+    if( prev_task->m_state.load( std::memory_order_relaxed ) == TaskState::Finished )
     {
-        prev_task->m_state.store( TaskState::Finished, std::memory_order_release );
+        prev_task->m_state.store( TaskState::Clear, std::memory_order_release );
         LOG << "Scheduler::switch_to prev::m_state = Finished\n";
     }
     else
