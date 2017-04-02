@@ -106,28 +106,18 @@ void Task::_run_wrapper( ::scontext::transfer_t transfer ) noexcept
 {
     try
     {
-        Task* next_task;
+        Task* current = nullptr;
         {
             LOG << "Task::_run_wrapper: started\n";
             Scheduler::post_jump_fcontext( transfer );
 
-            Task* current = Scheduler::get_current_task();
+            current = Scheduler::get_current_task();
             current->m_runnable();
             LOG << "Task::_run_wrapper: runnable finished, cleaning Task\n";
             current->release();
             current->m_state.store( TaskState::Finished, std::memory_order_relaxed );
-
-            // _run_wrapper() used only in AlterNative(BgRunner) Task
-            next_task = Scheduler::get_next_task();
-            if(next_task == nullptr)
-            {
-                next_task = Scheduler::get_native_task();
-            }
-            assert(next_task != nullptr);
         } // here all local objects NUST be destroyed because switch_to() will not return
-
-        Scheduler::switch_to( next_task );
-
+        Scheduler::schedule( current );
         // This line is unreachable,
         // because current context will never scheduled
         __builtin_unreachable();

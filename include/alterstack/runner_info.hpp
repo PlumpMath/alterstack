@@ -78,7 +78,7 @@ inline void RunnerInfo::set_task(Task *new_task)
     current().m_current_task = new_task;
 }
 
-inline Task *RunnerInfo::native_task()
+inline Task* RunnerInfo::native_task()
 {
     return &current().m_native_task;
 }

@@ -43,7 +43,7 @@ void BgThread::thread_function()
 
     while( true )
     {
-        Task* next_task = scheduler_->get_next_from_queue();
+        Task* next_task = scheduler_->get_running_from_queue();
         if( next_task != nullptr )
         {
             LOG << "BgThread::thread_function: got new task, switching on " << next_task << "\n";

@@ -31,6 +31,7 @@
 #include "task_buffer.hpp"
 #include "task_stack.hpp"
 #include "running_queue.hpp"
+#include "passkey.hpp"
 
 namespace alterstack
 {
@@ -48,6 +49,7 @@ enum class TaskState
 };
 
 class RunnerInfo;
+class Scheduler;
 /**
  * @brief Main class to start and wait tasks.
  *
@@ -69,6 +71,8 @@ public:
     static void yield();
     void wait();
     void release();
+
+    TaskState state(Passkey<Scheduler>) const;
 
 private:
     /**
@@ -106,6 +110,11 @@ private:
 inline void Task::release()
 {
     awaitable_.release();
+}
+
+inline TaskState Task::state(Passkey<Scheduler>) const
+{
+    return m_state.load( std::memory_order_acquire );
 }
 
 inline bool Task::is_thread_bound() noexcept

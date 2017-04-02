@@ -56,6 +56,11 @@ bool Scheduler::schedule(bool old_stay_running)
     return instance().do_schedule(old_stay_running);
 }
 
+bool Scheduler::schedule(Task *current_task)
+{
+    return instance().do_schedule( current_task );
+}
+
 bool Scheduler::do_schedule(bool old_stay_running)
 {
     LOG << "Scheduler::schedule\n";
@@ -71,6 +76,20 @@ bool Scheduler::do_schedule(bool old_stay_running)
         old_task->m_state = TaskState::Running;
     else
         old_task->m_state = TaskState::Waiting;
+    switch_to( next_task );
+    return true;
+}
+
+bool Scheduler::do_schedule( Task *current_task )
+{
+    LOG << "Scheduler::do_schedule( current_task )\n";
+
+    Task* next_task = get_next_task( current_task );
+    if( next_task == nullptr )
+    {
+        LOG << "Scheduler::do_schedule: nowhere to switch, do nothing\n";
+        return false;
+    }
     switch_to( next_task );
     return true;
 }
@@ -219,15 +238,15 @@ void Scheduler::do_schedule_waiting_task()
  * @brief get Task* from running queue
  * @return Task* or nullptr if queue is empty
  */
-Task* Scheduler::get_next_from_queue() noexcept
+Task* Scheduler::get_running_from_queue() noexcept
 {
     bool have_more_tasks = false;
-    Task* task = instance().running_queue_.get_task(have_more_tasks);
+    Task* task = running_queue_.get_task(have_more_tasks);
     LOG << "Scheduler::get_next_from_queue: got task " << task << " from running queue\n";
     if( task != nullptr
             && have_more_tasks)
     {
-        instance().bg_runner_.notify();
+        bg_runner_.notify();
     }
     return task;
 }
@@ -235,7 +254,7 @@ Task* Scheduler::get_next_from_queue() noexcept
  * @brief get Native Task* if it is running or nullptr
  * @return Native Task* or nullptr
  */
-Task* Scheduler::get_next_from_native()
+Task* Scheduler::get_running_from_native()
 {
     if( RunnerInfo::native_task()->m_state == TaskState::Running )
     {
@@ -265,11 +284,10 @@ void Scheduler::enqueue_alternative_task(Task *task) noexcept
 Task *Scheduler::get_next_task()
 {
     Task* current = get_current_task();
-    Task* next_task = nullptr;
     if( current->is_thread_bound() ) // Native thread in Native code calls yield()
     {
         LOG << "Scheduler::get_next_task: in Native\n";
-        return instance().get_next_from_queue();
+        return instance().get_running_from_queue();
     }
     else
     {
@@ -277,20 +295,53 @@ Task *Scheduler::get_next_task()
             // Native thread running on AlterStack
         {
             LOG << "Scheduler::_get_next_task: in AlterNative\n";
-            next_task = get_next_from_native();
+            Task* next_task = get_running_from_native();
             if( next_task != nullptr )
             {
                 return next_task;
             }
-            return instance().get_next_from_queue();
+            return instance().get_running_from_queue();
         }
         else // BgRunner on Alternative stack
         {
             LOG << "Scheduler::_get_next_task: in BgRunner\n";
-            return instance().get_next_from_queue();
+            return instance().get_running_from_queue();
         }
     }
     return nullptr;
+}
+
+Task *Scheduler::get_next_task( Task *current_task )
+{
+    Task* next_task = nullptr;
+    if( current_task->is_thread_bound() ) // Common thread in it's own context calls yield()
+    {
+        LOG << "Scheduler::next_task: Common thread code want to switch\n";
+        next_task = get_running_from_queue();
+    }
+    else // unbound Task in Common thread or in BgRunner
+    {
+        if( RunnerInfo::type() == RunnerType::CommonThread )
+            // Common code in unbound context
+        {
+            LOG << "Scheduler::next_task: in unbound context\n";
+            next_task = get_running_from_native();
+            if( next_task == nullptr )
+                next_task = get_running_from_queue();
+        }
+        else // BgRunner in unbound context
+        {
+            LOG << "Scheduler::next_task: in BgRunner\n";
+            next_task = get_running_from_queue();
+        }
+        if( next_task == nullptr
+                && current_task->state({}) == TaskState::Finished )
+        {
+            LOG << "Scheduler::next_task: current_task is unbound in Finished state\n";
+            next_task = get_native_task();
+        }
+    }
+    return next_task;
 }
 
 /**
