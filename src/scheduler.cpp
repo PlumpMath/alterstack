@@ -32,6 +32,8 @@
 namespace alterstack
 {
 
+thread_local RunnerType Scheduler::m_runner_type = RunnerType::CommonThread;
+
 namespace ctx = ::scontext;
 
 Scheduler::Scheduler()
@@ -271,7 +273,7 @@ Task *Scheduler::get_next_task()
     }
     else
     {
-        if( RunnerInfo::type() == RunnerType::NativeRunner )
+        if( RunnerInfo::type() == RunnerType::CommonThread )
             // Native thread running on AlterStack
         {
             LOG << "Scheduler::_get_next_task: in AlterNative\n";

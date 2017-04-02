@@ -24,12 +24,18 @@
 #include "context.hpp"
 #include "task.hpp"
 #include "bg_runner.hpp"
+#include "passkey.hpp"
 #include "logger.hpp"
 
 namespace alterstack
 {
 class Task;
 
+enum class RunnerType
+{
+    CommonThread, ///< main thread or some thread with user's code
+    BgRunner,     ///< special BgRunner thread
+};
 /**
  * @brief Tasks scheduler.
  *
@@ -73,6 +79,14 @@ public:
     static void  add_running_task(Task* task) noexcept;
 private:
     static void  enqueue_alternative_task(Task* task) noexcept;
+
+public:
+    static void set_bg_runner( Passkey<BgThread> ) { set_bg_runner(); }
+    RunnerType  runner_type() const { return m_runner_type; }
+private:
+    static void set_bg_runner() { m_runner_type = RunnerType::BgRunner; }
+    static thread_local RunnerType m_runner_type;
+
 private:
     friend class Task;
     friend class Awaitable;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 Alexey Syrnikov <san@masterspline.net>
+ * Copyright 2015-2017 Alexey Syrnikov <san@masterspline.net>
  * 
  * This file is part of Alterstack.
  *
@@ -23,15 +23,10 @@
 
 #include "futex.hpp"
 #include "task.hpp"
+#include "scheduler.hpp"
 
 namespace alterstack
 {
-
-enum class RunnerType
-{
-    NativeRunner,
-    BgRunner
-};
 
 class RunnerInfo
 {
@@ -54,7 +49,7 @@ private:
 
 inline RunnerInfo::RunnerInfo()
     :m_native_task( this )
-    ,m_type( RunnerType::NativeRunner )
+    ,m_type( RunnerType::CommonThread )
 {}
 
 inline RunnerInfo& RunnerInfo::current()

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 Alexey Syrnikov <san@masterspline.net>
+ * Copyright 2015-2017 Alexey Syrnikov <san@masterspline.net>
  *
  * This file is part of Alterstack.
  *
@@ -35,6 +35,7 @@ void BgThread::thread_function()
 {
     AtomicReturnBoolGuard thread_stopped_guard(m_thread_stopped);
     RunnerInfo::set_type( RunnerType::BgRunner );
+    Scheduler::set_bg_runner({});
 
     os::set_thread_name();
 
