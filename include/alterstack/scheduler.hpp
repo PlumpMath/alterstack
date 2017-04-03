@@ -52,8 +52,8 @@ private:
     Scheduler(Scheduler&&) = delete;
     Scheduler& operator=(const Scheduler&) = delete;
     Scheduler& operator=(Scheduler&&) = delete;
-public:
 
+public:
     [[deprecated]]
     static bool schedule(bool old_stay_running=true);
     static bool schedule( Task* current_task );
@@ -87,10 +87,12 @@ private:
     static void  enqueue_alternative_task(Task* task) noexcept;
 
 public:
-    static void set_bg_runner( Passkey<BgThread> ) { set_bg_runner(); }
-    RunnerType  runner_type() const { return m_runner_type; }
+    static RunnerType  runner_type();
+    static void set_bg_runner( Passkey<BgThread> );
+
 private:
-    static void set_bg_runner() { m_runner_type = RunnerType::BgRunner; }
+    static void set_runner_type( RunnerType type );
+
     static thread_local RunnerType m_runner_type;
 
 private:
@@ -99,6 +101,21 @@ private:
     friend class BgRunner;
     friend class BgThread;
 };
+
+inline void Scheduler::set_bg_runner( Passkey<BgThread> )
+{
+    set_runner_type( RunnerType::BgRunner );
+}
+
+inline RunnerType Scheduler::runner_type()
+{
+    return m_runner_type;
+}
+
+inline void Scheduler::set_runner_type(RunnerType type)
+{
+    m_runner_type = type;
+}
 
 /**
  * @brief get Scheduler instance singleton

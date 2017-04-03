@@ -34,8 +34,6 @@ public:
     RunnerInfo();
 
     static RunnerInfo& current();
-    static RunnerType  type();
-    static void  set_type(RunnerType runner_type);
     static Task* current_task();
     static void  set_task( Task* new_task );
     static Task* native_task();
@@ -44,28 +42,16 @@ public:
 private:
     Task  m_native_task;
     Task* m_current_task = nullptr;
-    RunnerType m_type;
 };
 
 inline RunnerInfo::RunnerInfo()
     :m_native_task( this )
-    ,m_type( RunnerType::CommonThread )
 {}
 
 inline RunnerInfo& RunnerInfo::current()
 {
     static thread_local RunnerInfo runner_info{};
     return runner_info;
-}
-
-inline RunnerType RunnerInfo::type()
-{
-    return current().m_type;
-}
-
-inline void RunnerInfo::set_type(RunnerType runner_type)
-{
-    current().m_type = runner_type;
 }
 
 inline Task *RunnerInfo::current_task()

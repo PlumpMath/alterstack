@@ -291,7 +291,7 @@ Task *Scheduler::get_next_task()
     }
     else
     {
-        if( RunnerInfo::type() == RunnerType::CommonThread )
+        if( Scheduler::runner_type() == RunnerType::CommonThread )
             // Native thread running on AlterStack
         {
             LOG << "Scheduler::_get_next_task: in AlterNative\n";
@@ -321,7 +321,7 @@ Task *Scheduler::get_next_task( Task *current_task )
     }
     else // unbound Task in Common thread or in BgRunner
     {
-        if( RunnerInfo::type() == RunnerType::CommonThread )
+        if( Scheduler::runner_type() == RunnerType::CommonThread )
             // Common code in unbound context
         {
             LOG << "Scheduler::next_task: in unbound context\n";
