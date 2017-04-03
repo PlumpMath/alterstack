@@ -23,50 +23,82 @@
 
 #include "futex.hpp"
 #include "task.hpp"
-#include "scheduler.hpp"
+#include "passkey.hpp"
 
 namespace alterstack
 {
 
-class RunnerInfo
+enum class RunnerType
+{
+    CommonThread, ///< main thread or some thread with user's code
+    BgRunner,     ///< special BgRunner thread
+};
+class BgThread;
+
+class TaskRunner
 {
 public:
-    RunnerInfo();
+    TaskRunner( const TaskRunner& ) = delete;
+    TaskRunner( TaskRunner&& )      = delete;
+    TaskRunner& operator=( const TaskRunner& ) = delete;
+    TaskRunner& operator=( TaskRunner&& )      = delete;
 
-    static RunnerInfo& current();
+    static TaskRunner& current();
     static Task* current_task();
     static void  set_task( Task* new_task );
     static Task* native_task();
+    RunnerType   type();
+
+    void make_bg_runner( Passkey<BgThread> );
 
     Futex native_futex;
 private:
+    TaskRunner();
+    void set_type( RunnerType type );
+
     Task  m_native_task;
     Task* m_current_task = nullptr;
+    RunnerType m_runner_type;
 };
 
-inline RunnerInfo::RunnerInfo()
-    :m_native_task( this )
+inline TaskRunner::TaskRunner()
+    :m_native_task( Passkey<TaskRunner>{} )
 {}
 
-inline RunnerInfo& RunnerInfo::current()
+inline TaskRunner& TaskRunner::current()
 {
-    static thread_local RunnerInfo runner_info{};
+    static thread_local TaskRunner runner_info{};
     return runner_info;
 }
 
-inline Task *RunnerInfo::current_task()
+inline Task* TaskRunner::current_task()
 {
     return current().m_current_task;
 }
 
-inline void RunnerInfo::set_task(Task *new_task)
+inline void TaskRunner::set_task(Task *new_task)
 {
     current().m_current_task = new_task;
 }
 
-inline Task* RunnerInfo::native_task()
+inline Task* TaskRunner::native_task()
 {
     return &current().m_native_task;
+}
+
+inline RunnerType TaskRunner::type()
+{
+    return m_runner_type;
+}
+
+inline void TaskRunner::make_bg_runner( Passkey<BgThread> )
+{
+    set_type( RunnerType::BgRunner );
+}
+
+inline void TaskRunner::set_type(RunnerType type)
+{
+    m_runner_type = type;
 }
 
 }

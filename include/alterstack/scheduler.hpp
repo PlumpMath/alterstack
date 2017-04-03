@@ -21,6 +21,7 @@
 
 #include "running_queue.hpp"
 #include "awaitable.hpp"
+#include "task_runner.hpp"
 #include "context.hpp"
 #include "task.hpp"
 #include "bg_runner.hpp"
@@ -31,11 +32,6 @@ namespace alterstack
 {
 class Task;
 
-enum class RunnerType
-{
-    CommonThread, ///< main thread or some thread with user's code
-    BgRunner,     ///< special BgRunner thread
-};
 /**
  * @brief Tasks scheduler.
  *
@@ -56,9 +52,7 @@ private:
 public:
     static bool schedule( Task* current_task = get_current_task() );
     static void run_new_task(Task *task);
-    static RunnerType runner_type();
 
-    static void set_bg_runner( Passkey<BgThread> );
     static void post_jump_fcontext( Passkey<Task>,  ::scontext::transfer_t transfer );
 
 private:
@@ -77,15 +71,11 @@ private:
 
     BgRunner bg_runner_;
     RunningQueue<Task> running_queue_;
+
 public:
     static void  add_running_task(Task* task) noexcept;
 private:
     static void  enqueue_alternative_task(Task* task) noexcept;
-
-private:
-    static void set_runner_type( RunnerType type );
-
-    static thread_local RunnerType m_runner_type;
 
 private:
     friend class Task;
@@ -94,24 +84,9 @@ private:
     friend class BgThread;
 };
 
-inline void Scheduler::set_bg_runner( Passkey<BgThread> )
-{
-    set_runner_type( RunnerType::BgRunner );
-}
-
 inline void Scheduler::post_jump_fcontext(Passkey<Task>, scontext::transfer_t transfer)
 {
     post_jump_fcontext( transfer );
-}
-
-inline RunnerType Scheduler::runner_type()
-{
-    return m_runner_type;
-}
-
-inline void Scheduler::set_runner_type(RunnerType type)
-{
-    m_runner_type = type;
 }
 
 /**

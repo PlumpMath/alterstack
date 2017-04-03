@@ -19,7 +19,7 @@
 
 #include "alterstack/awaitable.hpp"
 #include "alterstack/scheduler.hpp"
-#include "alterstack/runner_info.hpp"
+#include "alterstack/task_runner.hpp"
 #include "alterstack/logger.hpp"
 
 #include <cassert>

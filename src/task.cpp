@@ -37,8 +37,7 @@ namespace ctx = ::scontext;
  * @param runnable void() function or functor to start
  */
 Task::Task( ::std::function<void()> runnable )
-    :m_native_info{ nullptr }
-    ,m_state{ TaskState::Running }
+    :m_state{ TaskState::Running }
     ,m_stack{ new Stack() }
     ,m_runnable{ std::move(runnable) }
     ,m_is_thread_bound{ false }
@@ -54,10 +53,9 @@ Task::Task( ::std::function<void()> runnable )
  *
  * @param native_info points to RunnerInfo
  */
-Task::Task(RunnerInfo* native_info)
+Task::Task( Passkey<TaskRunner> )
     :m_context(nullptr)
-    ,m_native_info(native_info)
-    ,m_state(TaskState::Running)
+    ,m_state( TaskState::Running )
     ,m_is_thread_bound{ true }
 {}
 /**

@@ -26,13 +26,11 @@
 #include "alterstack/spin_lock.hpp"
 #include "alterstack/context.hpp"
 #include "alterstack/bg_runner.hpp"
-#include "alterstack/runner_info.hpp"
+#include "alterstack/task_runner.hpp"
 #include "alterstack/logger.hpp"
 
 namespace alterstack
 {
-
-thread_local RunnerType Scheduler::m_runner_type = RunnerType::CommonThread;
 
 namespace ctx = ::scontext;
 
@@ -79,7 +77,7 @@ bool Scheduler::do_schedule( Task *current_task )
                 {
                     LOG << "Scheduler::do_schedule: current Task is in Waiting state and "
                            "nowhere to switch, waiting...\n";
-                    current_task->m_native_info->native_futex.wait();
+                    TaskRunner::current().native_futex.wait();
                 }
 
             }
@@ -123,7 +121,7 @@ void Scheduler::switch_to( Task* new_task )
     Task* old_task = get_current_task();
     LOG << "Scheduler::switch_to old_task -> new_task(m_context): "
         << old_task << " -> " << new_task << " (" << new_task->m_context << ")\n";
-    RunnerInfo::set_task( new_task );
+    TaskRunner::set_task( new_task );
     ::scontext::transfer_t transfer = ::scontext::jump_fcontext(
                 new_task->m_context
                 ,(void*)old_task );
@@ -173,11 +171,11 @@ void Scheduler::post_jump_fcontext( ::scontext::transfer_t transfer )
  */
 Task* Scheduler::get_current_task()
 {
-    if ( RunnerInfo::current_task() == nullptr )
+    if ( TaskRunner::current_task() == nullptr )
     {
-        RunnerInfo::set_task( RunnerInfo::native_task() );
+        TaskRunner::set_task( TaskRunner::native_task() );
     }
-    return RunnerInfo::current_task();
+    return TaskRunner::current_task();
 }
 /**
  * @brief get Native Task pointer (create Task instance if does not exist)
@@ -185,7 +183,7 @@ Task* Scheduler::get_current_task()
  */
 Task* Scheduler::get_native_task()
 {
-    return RunnerInfo::native_task();
+    return TaskRunner::native_task();
 }
 /**
  * @brief get Task* from running queue
@@ -209,10 +207,10 @@ Task* Scheduler::get_running_from_queue() noexcept
  */
 Task* Scheduler::get_running_from_native()
 {
-    if( RunnerInfo::native_task()->m_state == TaskState::Running )
+    if( TaskRunner::native_task()->m_state == TaskState::Running )
     {
         LOG << "Scheduler::_get_next_from_native: got native task\n";
-        return RunnerInfo::native_task();
+        return TaskRunner::native_task();
     }
     return nullptr;
 }
@@ -244,7 +242,7 @@ Task *Scheduler::get_next_task( Task *current_task )
     }
     else // unbound Task in Common thread or in BgRunner
     {
-        if( Scheduler::runner_type() == RunnerType::CommonThread )
+        if( TaskRunner::current().type() == RunnerType::CommonThread )
             // Common code in unbound context
         {
             LOG << "Scheduler::next_task: in unbound context\n";
@@ -282,7 +280,7 @@ void Scheduler::add_running_task( Task* task ) noexcept
     {
         LOG << "Scheduler::enqueue_running_task: task " << task <<
                " is Native, marking Ready and notifying\n";
-        task->m_native_info->native_futex.notify();
+        TaskRunner::current().native_futex.notify();
     }
     else // AlterNative or BgRunner
     {

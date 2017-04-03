@@ -23,9 +23,9 @@
 #include "alterstack/bg_runner.hpp"
 #include "alterstack/scheduler.hpp"
 #include "alterstack/task.hpp"
-#include "alterstack/runner_info.hpp"
-#include "alterstack/logger.hpp"
+#include "alterstack/task_runner.hpp"
 #include "alterstack/os_utils.hpp"
+#include "alterstack/logger.hpp"
 
 namespace alterstack
 {
@@ -34,7 +34,7 @@ namespace alterstack
 void BgThread::thread_function()
 {
     AtomicReturnBoolGuard thread_stopped_guard(m_thread_stopped);
-    Scheduler::set_bg_runner({});
+    TaskRunner::current().make_bg_runner({});
     os::set_thread_name();
     LOG << "BgThread::thread_function: started\n";
 

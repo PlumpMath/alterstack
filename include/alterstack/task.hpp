@@ -25,7 +25,6 @@
 #include <atomic>
 
 #include "awaitable.hpp"
-#include "scheduler.hpp"
 #include "stack.hpp"
 #include "context.hpp"
 #include "task_buffer.hpp"
@@ -48,7 +47,7 @@ enum class TaskState
              /// thread if TaskState == Clear (Task stack also MUST be not used)
 };
 
-class RunnerInfo;
+class TaskRunner;
 class Scheduler;
 /**
  * @brief Main class to start and wait tasks.
@@ -59,7 +58,8 @@ class Task
 {
 public:
     Task( ::std::function<void()> runnable ); ///< will create unbound Task
-    explicit Task(RunnerInfo *native_info); ///< will create create thread bound Task
+    // FIXME: make this in factory
+    Task( Passkey<TaskRunner> ); ///< will create thread bound Task
     ~Task();
 
     Task() = delete;
@@ -87,7 +87,6 @@ private:
     Task*      next_ = nullptr;
     Context    m_context;
 
-    RunnerInfo* const m_native_info;
     std::atomic<TaskState>  m_state;
 
     std::unique_ptr<Stack>  m_stack;
