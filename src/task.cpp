@@ -66,9 +66,10 @@ Task::Task(RunnerInfo* native_info)
 Task::~Task()
 {
     LOG << "Task::~Task: " << this << "\n";
-    if( is_thread_bound() ) // AlterNative Task marked Created in _run_wrapper()
+    if( is_thread_bound() )
     {
-        m_state = TaskState::Clear;
+        m_state = TaskState::Clear;  // unbound Task will be marked as Clear in _run_wrapper()
+        return;
     }
     wait();
     while( m_state != TaskState::Clear )
@@ -85,7 +86,7 @@ Task::~Task()
  */
 void Task::yield()
 {
-    Scheduler::schedule();
+    Scheduler::schedule() ;
 }
 
 /**

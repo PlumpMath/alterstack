@@ -54,9 +54,7 @@ private:
     Scheduler& operator=(Scheduler&&) = delete;
 
 public:
-    [[deprecated]]
-    static bool schedule(bool old_stay_running=true);
-    static bool schedule( Task* current_task );
+    static bool schedule( Task* current_task = get_current_task() );
     static void run_new_task(Task *task);
     static void schedule_waiting_task();
     static void switch_to(Task* new_task );
@@ -64,8 +62,6 @@ public:
     static void post_jump_fcontext( Passkey<Task>,  ::scontext::transfer_t transfer );
 
 private:
-    [[deprecated]]
-    bool do_schedule(bool old_stay_running);
     bool do_schedule( Task* current_task );
     void do_schedule_new_task(Task *task);
     void do_schedule_waiting_task();
@@ -77,8 +73,6 @@ private:
     static Task* get_running_from_native();
     static Task* get_current_task();
     static Task* get_native_task();
-    [[deprecated]]
-    static Task* get_next_task();
     Task* get_next_task( Task* current_task );
 
     BgRunner bg_runner_;

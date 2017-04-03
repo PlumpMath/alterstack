@@ -43,41 +43,14 @@ Scheduler::Scheduler()
 /**
  * @brief schedule next task on current OS thread
  *
- * If current_still_running == true, current task stay Running
- *
  * schedule() tries to find next Running Task using scheduling algorithm of Scheduler.
  * If new task available switch OS thread to it. If no Task available
  * do nothing (continue running current Task).
- * @param old_stay_running if true, save old task in running queue
  * @return true if at least one switch done
  */
-bool Scheduler::schedule(bool old_stay_running)
-{
-    return instance().do_schedule(old_stay_running);
-}
-
 bool Scheduler::schedule(Task *current_task)
 {
     return instance().do_schedule( current_task );
-}
-
-bool Scheduler::do_schedule(bool old_stay_running)
-{
-    LOG << "Scheduler::schedule\n";
-
-    Task* next_task = get_next_task();
-    if( next_task == nullptr )
-    {
-        LOG << "Scheduler::schedule: nowhere to switch, do nothing\n";
-        return false;
-    }
-    Task* old_task = get_current_task();
-    if( old_stay_running )
-        old_task->m_state = TaskState::Running;
-    else
-        old_task->m_state = TaskState::Waiting;
-    switch_to( next_task );
-    return true;
 }
 
 bool Scheduler::do_schedule( Task *current_task )
@@ -165,12 +138,7 @@ void Scheduler::post_jump_fcontext( ::scontext::transfer_t transfer )
         LOG << "Scheduler::post_jump_fcontext saved prev_task m_context " << transfer.fctx << "\n";
     }
 
-    if( prev_task == nullptr )
-    {
-        LOG << "Scheduler::post_jump_fcontext: old_task == nullptr, do nothing\n";
-        return;
-    }
-    if( !prev_task->is_thread_bound() // AlterNative
+    if( !prev_task->is_thread_bound()
             && prev_task->m_state == TaskState::Running )
     {
         LOG << "Scheduler::post_jump_fcontext: enqueueing old task\n";
@@ -208,11 +176,10 @@ void Scheduler::schedule_waiting_task()
 void Scheduler::do_schedule_waiting_task()
 {
     /* At this point current task inserted in wait list and MUST not be inserted in
-     * running list and current_task->m_context == nullptr to protect scheduling current task
-     * for other thread (if it is AlterNative Task).
+     * running list
      */
     LOG << "Scheduler::do_schedule_waiting_task: trying to schedule next task\n";
-    bool switched = schedule(false);
+    bool switched = schedule();
     // Nothing to schedule or waiting finished
     Task* current_task = get_current_task();
     if( current_task->is_thread_bound() )
@@ -281,36 +248,6 @@ void Scheduler::enqueue_alternative_task(Task *task) noexcept
  * @brief get next Task* to run using schedule algorithm of Scheduler
  * @return next running Task* or nullptr
  */
-Task *Scheduler::get_next_task()
-{
-    Task* current = get_current_task();
-    if( current->is_thread_bound() ) // Native thread in Native code calls yield()
-    {
-        LOG << "Scheduler::get_next_task: in Native\n";
-        return instance().get_running_from_queue();
-    }
-    else
-    {
-        if( Scheduler::runner_type() == RunnerType::CommonThread )
-            // Native thread running on AlterStack
-        {
-            LOG << "Scheduler::_get_next_task: in AlterNative\n";
-            Task* next_task = get_running_from_native();
-            if( next_task != nullptr )
-            {
-                return next_task;
-            }
-            return instance().get_running_from_queue();
-        }
-        else // BgRunner on Alternative stack
-        {
-            LOG << "Scheduler::_get_next_task: in BgRunner\n";
-            return instance().get_running_from_queue();
-        }
-    }
-    return nullptr;
-}
-
 Task *Scheduler::get_next_task( Task *current_task )
 {
     Task* next_task = nullptr;

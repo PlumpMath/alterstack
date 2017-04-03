@@ -41,7 +41,7 @@ void BgThread::thread_function()
     while( true )
     {
         LOG << "BgThread::thread_function: will try to schedule something...\n";
-        Scheduler::schedule( Scheduler::get_current_task() );
+        Scheduler::schedule();
         if( is_stop_requested() )
             return;
 
