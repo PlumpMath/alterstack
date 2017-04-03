@@ -60,7 +60,8 @@ public:
     static void run_new_task(Task *task);
     static void schedule_waiting_task();
     static void switch_to(Task* new_task );
-    static void post_jump_fcontext( ::scontext::transfer_t transfer );
+
+    static void post_jump_fcontext( Passkey<Task>,  ::scontext::transfer_t transfer );
 
 private:
     [[deprecated]]
@@ -68,8 +69,9 @@ private:
     bool do_schedule( Task* current_task );
     void do_schedule_new_task(Task *task);
     void do_schedule_waiting_task();
-
     static Scheduler& instance();
+
+    static void post_jump_fcontext( ::scontext::transfer_t transfer );
 
     Task* get_running_from_queue() noexcept;
     static Task* get_running_from_native();
@@ -105,6 +107,11 @@ private:
 inline void Scheduler::set_bg_runner( Passkey<BgThread> )
 {
     set_runner_type( RunnerType::BgRunner );
+}
+
+inline void Scheduler::post_jump_fcontext(Passkey<Task>, scontext::transfer_t transfer)
+{
+    post_jump_fcontext( transfer );
 }
 
 inline RunnerType Scheduler::runner_type()

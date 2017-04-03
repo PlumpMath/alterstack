@@ -109,7 +109,7 @@ void Task::_run_wrapper( ::scontext::transfer_t transfer ) noexcept
         Task* current = nullptr;
         {
             LOG << "Task::_run_wrapper: started\n";
-            Scheduler::post_jump_fcontext( transfer );
+            Scheduler::post_jump_fcontext( {}, transfer );
 
             current = Scheduler::get_current_task();
             current->m_runnable();

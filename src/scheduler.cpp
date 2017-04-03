@@ -151,29 +151,29 @@ void Scheduler::switch_to( Task* new_task )
  */
 void Scheduler::post_jump_fcontext( ::scontext::transfer_t transfer )
 {
-    LOG << "Scheduler::post_switch_fixup\n";
+    LOG << "Scheduler::post_jump_fcontext\n";
 
     Task* prev_task = (Task*)transfer.data;
     if( prev_task->m_state.load( std::memory_order_relaxed ) == TaskState::Finished )
     {
         prev_task->m_state.store( TaskState::Clear, std::memory_order_release );
-        LOG << "Scheduler::switch_to prev::m_state = Finished\n";
+        LOG << "Scheduler::post_jump_fcontext prev::m_state = Finished\n";
     }
     else
     {
         prev_task->m_context = transfer.fctx;
-        LOG << "Scheduler::switch_to saved prev_task m_context " << transfer.fctx << "\n";
+        LOG << "Scheduler::post_jump_fcontext saved prev_task m_context " << transfer.fctx << "\n";
     }
 
     if( prev_task == nullptr )
     {
-        LOG << "Scheduler::post_switch_fixup: old_task == nullptr, do nothing\n";
+        LOG << "Scheduler::post_jump_fcontext: old_task == nullptr, do nothing\n";
         return;
     }
     if( !prev_task->is_thread_bound() // AlterNative
             && prev_task->m_state == TaskState::Running )
     {
-        LOG << "Scheduler::post_switch_fixup: enqueueing old task\n";
+        LOG << "Scheduler::post_jump_fcontext: enqueueing old task\n";
         enqueue_alternative_task(prev_task);
     }
 }
