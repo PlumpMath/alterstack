@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 Alexey Syrnikov <san@masterspline.net>
+ * Copyright 2015-2017 Alexey Syrnikov <san@masterspline.net>
  *
  * This file is part of Alterstack.
  *
@@ -93,7 +93,7 @@ void Awaitable::wait()
 {
     if( insert_current_task_in_waitlist() )
     {
-        Scheduler::schedule_waiting_task();
+        Scheduler::schedule();
     }
 }
 

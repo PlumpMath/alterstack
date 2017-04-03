@@ -57,11 +57,33 @@ bool Scheduler::do_schedule( Task *current_task )
 {
     LOG << "Scheduler::do_schedule( current_task )\n";
 
-    Task* next_task = get_next_task( current_task );
-    if( next_task == nullptr )
+    Task* next_task = nullptr;
+    while( true )
     {
-        LOG << "Scheduler::do_schedule: nowhere to switch, do nothing\n";
-        return false;
+        next_task = get_next_task( current_task );
+        if( next_task != nullptr )
+        {
+            break;
+        }
+        else
+        {
+            if( current_task->state({}) == TaskState::Running )
+            {
+                LOG << "Scheduler::do_schedule: nowhere to switch, do nothing\n";
+                return false;
+            }
+            else // Only bound Common current_task will get here
+            {
+                // FIXME: here I need Task::thread_wait() method to wait and exit on thread cancelled
+                if( current_task->m_state == TaskState::Waiting )
+                {
+                    LOG << "Scheduler::do_schedule: current Task is in Waiting state and "
+                           "nowhere to switch, waiting...\n";
+                    current_task->m_native_info->native_futex.wait();
+                }
+
+            }
+        }
     }
     switch_to( next_task );
     return true;
@@ -166,42 +188,6 @@ Task* Scheduler::get_native_task()
     return RunnerInfo::native_task();
 }
 /**
- * @brief switch to new task or wait because current task is waiting
- */
-void Scheduler::schedule_waiting_task()
-{
-    instance().do_schedule_waiting_task();
-}
-
-void Scheduler::do_schedule_waiting_task()
-{
-    /* At this point current task inserted in wait list and MUST not be inserted in
-     * running list
-     */
-    LOG << "Scheduler::do_schedule_waiting_task: trying to schedule next task\n";
-    bool switched = schedule();
-    // Nothing to schedule or waiting finished
-    Task* current_task = get_current_task();
-    if( current_task->is_thread_bound() )
-    {
-        while(current_task->m_state == TaskState::Waiting)
-        {
-            current_task->m_native_info->native_futex.wait();
-        }
-        return;
-    }
-    else
-    {
-        // if Task switched and then got back here it's Running, not Waiting
-        // but if not we will switch to native without storing it running queue
-        if( !switched )
-        {
-            switch_to( RunnerInfo::native_task() );
-        }
-        return;
-    }
-}
-/**
  * @brief get Task* from running queue
  * @return Task* or nullptr if queue is empty
  */
@@ -271,8 +257,10 @@ Task *Scheduler::get_next_task( Task *current_task )
             LOG << "Scheduler::next_task: in BgRunner\n";
             next_task = get_running_from_queue();
         }
+        auto current_state = current_task->state({});
         if( next_task == nullptr
-                && current_task->state({}) == TaskState::Finished )
+                && ( current_state == TaskState::Finished
+                     || current_state == TaskState::Waiting ) )
         {
             LOG << "Scheduler::next_task: current_task is unbound in Finished state\n";
             next_task = get_native_task();
