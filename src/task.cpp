@@ -33,7 +33,7 @@ namespace alterstack
 namespace ctx = ::scontext;
 
 /**
- * @brief constructor to create AlterNative Task
+ * @brief constructor to create thread unbound Task
  * @param runnable void() function or functor to start
  */
 Task::Task( ::std::function<void()> runnable )
@@ -41,6 +41,7 @@ Task::Task( ::std::function<void()> runnable )
     ,m_state{ TaskState::Running }
     ,m_stack{ new Stack() }
     ,m_runnable{ std::move(runnable) }
+    ,m_is_thread_bound{ false }
 {
     LOG << "Task::Task\n";
     m_context = ctx::make_fcontext( m_stack->stack_top(), m_stack->size(), _run_wrapper);
@@ -49,7 +50,7 @@ Task::Task( ::std::function<void()> runnable )
     Scheduler::run_new_task( this );
 }
 /**
- * @brief constructor to create Native Task
+ * @brief constructor to create thread bound Task
  *
  * @param native_info points to RunnerInfo
  */
@@ -57,6 +58,7 @@ Task::Task(RunnerInfo* native_info)
     :m_context(nullptr)
     ,m_native_info(native_info)
     ,m_state(TaskState::Running)
+    ,m_is_thread_bound{ true }
 {}
 /**
  * @brief destructor will wait if Task still Running
