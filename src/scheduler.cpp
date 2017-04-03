@@ -181,7 +181,7 @@ void Scheduler::post_jump_fcontext( ::scontext::transfer_t transfer )
  * @brief get current Task*
  * @return pointer to current Task
  */
-Task *Scheduler::get_current_task()
+Task* Scheduler::get_current_task()
 {
     if ( RunnerInfo::current_task() == nullptr )
     {
@@ -314,7 +314,7 @@ Task *Scheduler::get_next_task()
 Task *Scheduler::get_next_task( Task *current_task )
 {
     Task* next_task = nullptr;
-    if( current_task->is_thread_bound() ) // Common thread in it's own context calls yield()
+    if( current_task->is_thread_bound() ) // Common or BgRunner thread in it's own context
     {
         LOG << "Scheduler::next_task: Common thread code want to switch\n";
         next_task = get_running_from_queue();

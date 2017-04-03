@@ -81,6 +81,7 @@ private:
      */
     [[noreturn]]
     static void _run_wrapper( ::scontext::transfer_t transfer ) noexcept;
+    [[deprecated("Mark task as bound in Task's field")]]
     bool is_thread_bound() noexcept;
 
     Awaitable  awaitable_;

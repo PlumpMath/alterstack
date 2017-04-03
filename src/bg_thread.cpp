@@ -35,31 +35,22 @@ void BgThread::thread_function()
 {
     AtomicReturnBoolGuard thread_stopped_guard(m_thread_stopped);
     Scheduler::set_bg_runner({});
-
     os::set_thread_name();
-
     LOG << "BgThread::thread_function: started\n";
 
     while( true )
     {
-        Task* next_task = scheduler_->get_running_from_queue();
-        if( next_task != nullptr )
-        {
-            LOG << "BgThread::thread_function: got new task, switching on " << next_task << "\n";
-            scheduler_->switch_to(next_task);
-        }
-
+        LOG << "BgThread::thread_function: will try to schedule something...\n";
+        Scheduler::schedule( Scheduler::get_current_task() );
         if( is_stop_requested() )
-        {
             return;
-        }
+
         LOG << "BgThread::thread_function: waiting...\n";
         wait();
         LOG << "BgThread::thread_function: waked up\n";
+
         if( is_stop_requested() )
-        {
             return;
-        }
     }
 }
 
