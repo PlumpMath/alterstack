@@ -27,9 +27,6 @@
 #include "awaitable.hpp"
 #include "stack.hpp"
 #include "context.hpp"
-#include "task_buffer.hpp"
-#include "task_stack.hpp"
-#include "running_queue.hpp"
 #include "passkey.hpp"
 
 namespace alterstack
@@ -49,6 +46,12 @@ enum class TaskState
 
 class TaskRunner;
 class Scheduler;
+template<typename Task>
+class TaskBuffer;
+template<typename Task>
+class TaskStack;
+template<typename Task>
+class RunningQueue;
 /**
  * @brief Main class to start and wait tasks.
  *

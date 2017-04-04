@@ -24,11 +24,14 @@ namespace alterstack
 
 template <typename T>
 class Passkey {
-    private:
+private:
     friend T;
     Passkey() noexcept {}
-    Passkey( const Passkey&) = default;
-    Passkey( Passkey&&) = default;
+    Passkey( Passkey&& ) {}
+
+    Passkey( const Passkey& ) = delete;
+    Passkey& operator=( const Passkey& ) = delete;
+    Passkey& operator=( Passkey&& )      = delete;
 };
 
 }
