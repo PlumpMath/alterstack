@@ -40,34 +40,37 @@ target_link_libraries( gai_check ${COMMON_LIBS} )
 
 add_library( catch_main STATIC catch_main.cpp )
 
-add_executable( task_buffer
-    task_buffer.cpp
-)
-target_link_libraries( task_buffer catch_main ${COMMON_LIBS})
-add_test( task_buffer task_buffer )
+# FIXME: temporary disable tests
+#add_executable( task_buffer
+#    task_buffer.cpp
+#)
+#target_link_libraries( task_buffer catch_main ${COMMON_LIBS})
+#add_test( task_buffer task_buffer )
+
+## load test
+#add_executable( load_task_buffer
+#    ./load_test/load_task_buffer.cpp
+#)
+#target_link_libraries( load_task_buffer ${COMMON_LIBS} Threads::Threads )
+
+#add_executable( task_stack
+#    task_stack.cpp
+#)
+#target_link_libraries( task_stack catch_main ${COMMON_LIBS} )
+#add_test( task_stack task_stack )
+
+#add_executable( running_queue
+#    running_queue.cpp
+#)
+#target_link_libraries( running_queue catch_main ${COMMON_LIBS} )
+#add_test( running_queue running_queue )
 
 # load test
-add_executable( load_task_buffer
-    ./load_test/load_task_buffer.cpp
-)
-target_link_libraries( load_task_buffer ${COMMON_LIBS} Threads::Threads )
-
-add_executable( task_stack
-    task_stack.cpp
-)
-target_link_libraries( task_stack catch_main ${COMMON_LIBS} )
-add_test( task_stack task_stack )
-
-add_executable( running_queue
-    running_queue.cpp
-)
-target_link_libraries( running_queue catch_main ${COMMON_LIBS} )
-add_test( running_queue running_queue )
-# load test
-add_executable( load_running_queue
-    ./load_test/load_running_queue.cpp
-)
-target_link_libraries( load_running_queue ${COMMON_LIBS} Threads::Threads)
+#add_executable( load_running_queue
+#    ./load_test/load_running_queue.cpp
+#)
+#target_link_libraries( load_running_queue ${COMMON_LIBS} Threads::Threads)
+# === FIXME: temporary disable tests
 
 add_executable( load_futex ./load_test/load_futex.cpp )
 target_link_libraries( load_futex Threads::Threads )

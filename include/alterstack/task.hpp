@@ -24,6 +24,7 @@
 #include <memory>
 #include <atomic>
 
+#include "intrusive_list.hpp"
 #include "awaitable.hpp"
 #include "stack.hpp"
 #include "context.hpp"
@@ -46,6 +47,7 @@ enum class TaskState
 
 class TaskRunner;
 class Scheduler;
+class Awaitable;
 template<typename Task>
 class TaskBuffer;
 template<typename Task>
@@ -57,7 +59,7 @@ class RunningQueue;
  *
  * Details see on Main Page in section @ref task_section.
  */
-class Task
+class Task : private IntrusiveList<Task>
 {
 public:
     Task( ::std::function<void()> runnable ); ///< will create unbound Task
@@ -75,7 +77,7 @@ public:
     void wait();
     void release();
 
-    TaskState state(Passkey<Scheduler>) const;
+    TaskState state( Passkey<Scheduler> ) const noexcept;
 
 private:
     /**
@@ -85,9 +87,9 @@ private:
     [[noreturn]]
     static void _run_wrapper( ::scontext::transfer_t transfer ) noexcept;
     bool is_thread_bound() noexcept;
+    TaskState state() const noexcept;
 
     Awaitable  awaitable_;
-    Task*      next_ = nullptr;
     Context    m_context;
 
     std::atomic<TaskState>  m_state;
@@ -97,7 +99,7 @@ private:
     bool m_is_thread_bound;
 private:
     friend class Scheduler;
-    friend class Awaitable; // for manipulating m_next intrusive list pointer
+    friend class Awaitable;
     friend class TaskBuffer<Task>;
     friend class TaskStack<Task>;
     friend class RunningQueue<Task>;
@@ -115,7 +117,11 @@ inline void Task::release()
     awaitable_.release();
 }
 
-inline TaskState Task::state(Passkey<Scheduler>) const
+inline TaskState Task::state(Passkey<Scheduler>) const noexcept
+{
+    return state();
+}
+inline TaskState Task::state() const noexcept
 {
     return m_state.load( std::memory_order_acquire );
 }

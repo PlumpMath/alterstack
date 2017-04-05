@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 Alexey Syrnikov <san@masterspline.net>
+ * Copyright 2015-2017 Alexey Syrnikov <san@masterspline.net>
  *
  * This file is part of Alterstack.
  *
@@ -71,8 +71,8 @@ Task *RunningQueue<Task>::get_task(bool& have_more_tasks) noexcept
     if( task_list != nullptr )
     {
         task = task_list;
-        task_list = task_list->next_;
-        task->next_ = nullptr;
+        task_list = task_list->next();
+        task->set_next( nullptr );
         if( task_list != nullptr )
         {
             task_buffer_.put_task(task_list);

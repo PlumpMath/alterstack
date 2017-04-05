@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Alexey Syrnikov <san@masterspline.net>
+ * Copyright 2015,2017 Alexey Syrnikov <san@masterspline.net>
  *
  * This file is part of Alterstack.
  *
@@ -26,15 +26,15 @@
 #include <catch.hpp>
 
 #include "alterstack/task_buffer.hpp"
+#include "alterstack/intrusive_list.hpp"
 
 namespace alterstack
 {
-class Task
+class Task : private IntrusiveList<Task>
 {
 private:
     friend class TaskBuffer<Task>;
     friend class UnitTestAccessor;
-    Task* next_ = nullptr;
 };
 
 class UnitTestAccessor
@@ -42,7 +42,7 @@ class UnitTestAccessor
 public:
     static alterstack::Task* get_next(alterstack::Task* task)
     {
-        return task->next_;
+        return task->next();
     }
 };
 }

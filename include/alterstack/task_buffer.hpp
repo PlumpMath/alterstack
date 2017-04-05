@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Alexey Syrnikov <san@masterspline.net>
+ * Copyright 2015,2017 Alexey Syrnikov <san@masterspline.net>
  *
  * This file is part of Alterstack.
  *
@@ -113,11 +113,11 @@ Task* TaskBuffer<Task>::get_task(bool& have_more) noexcept
         {
             get_position_.fetch_add(1+i, std::memory_order_relaxed);
             // store task->next back in buffer if not nullptr
-            if( task->next_ != nullptr )
+            if( task->next() != nullptr )
             {
-                Task* task_tail = task->next_;
+                Task* task_tail = task->next();
                 store_tail(task_tail);
-                task->next_ = nullptr;
+                task->set_next( nullptr );
                 have_more = true;
             }
             break;
@@ -176,11 +176,11 @@ void TaskBuffer<Task>::store_tail(Task *task_list) noexcept
             return;
         }
         Task* task = task_list;
-        task_list = task_list->next_;
-        task->next_ = nullptr;
+        task_list = task_list->next();
+        task->set_next( nullptr );
         if( !store_in_empty_slot(task) )
         {
-            task->next_ = task_list;
+            task->set_next( task_list );
             store_in_occupied_slot(task);
             return;
         }
@@ -192,15 +192,15 @@ template<typename Task>
 Task* TaskBuffer<Task>::find_last_task_in_list(Task* task_list)
 {
     Task* last_task = task_list;
-    while( last_task->next_ != nullptr )
+    while( last_task->next() != nullptr )
     {
-        last_task = last_task->next_;
+        last_task = last_task->next();
     }
     return last_task;
 }
 
 template<typename Task>
-void TaskBuffer<Task>::store_in_occupied_slot(Task *task_list) noexcept
+void TaskBuffer<Task>::store_in_occupied_slot( Task* task_list ) noexcept
 {
     uint32_t index = put_position_.fetch_add(1, std::memory_order_relaxed);
     Task* old_list = buffer_[index % buffer_size_].exchange(
@@ -210,14 +210,14 @@ void TaskBuffer<Task>::store_in_occupied_slot(Task *task_list) noexcept
         return;
     }
 
-    Task** last_next_ptr = &find_last_task_in_list(old_list)->next_;
+    Task* last_task_in_list = find_last_task_in_list(old_list);
 
-    *last_next_ptr = task_list;
+    last_task_in_list->set_next( task_list );
     while( !buffer_[index % buffer_size_].compare_exchange_weak(
                task_list, old_list
                ,std::memory_order_release, std::memory_order_relaxed) )
     {
-        *last_next_ptr = task_list;
+        last_task_in_list->set_next( task_list );
     }
 }
 

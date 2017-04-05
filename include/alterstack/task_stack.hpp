@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Alexey Syrnikov <san@masterspline.net>
+ * Copyright 2015,2017 Alexey Syrnikov <san@masterspline.net>
  *
  * This file is part of Alterstack.
  *
@@ -59,15 +59,15 @@ TaskStack<Task>::TaskStack() noexcept
 template<typename Task>
 bool TaskStack<Task>::push(Task *task) noexcept
 {
-    assert(task->next_ == nullptr);
+    assert( task->next() == nullptr);
     Task* head = head_.load(std::memory_order_acquire);
-    task->next_ = head;
+    task->set_next( head );
     while( !head_.compare_exchange_weak(
                head,task
                ,std::memory_order_release
                ,std::memory_order_relaxed) )
     {
-        task->next_ = head;
+        task->set_next( head );
     }
     return (head == nullptr) ? true : false;
 }
