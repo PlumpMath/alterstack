@@ -21,7 +21,7 @@
 #include <assert.h>
 #include <atomic>
 
-#include "task_buffer.hpp"
+#include "bound_buffer.hpp"
 
 namespace alterstack
 {

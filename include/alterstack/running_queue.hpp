@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "task_buffer.hpp"
+#include "bound_buffer.hpp"
 #include "task_stack.hpp"
 
 namespace alterstack
@@ -55,14 +55,14 @@ public:
     void put_task(Task* task) noexcept;
 
 private:
-    TaskBuffer<Task> task_buffer_;
+    BoundBuffer<Task> task_buffer_;
     TaskStack<Task>  task_stack_;
 };
 
 template<typename Task>
 Task *RunningQueue<Task>::get_task(bool& have_more_tasks) noexcept
 {
-    Task* task = task_buffer_.get_task(have_more_tasks);
+    Task* task = task_buffer_.get_item( have_more_tasks );
     if( task != nullptr )
     {
         return task;
@@ -75,7 +75,7 @@ Task *RunningQueue<Task>::get_task(bool& have_more_tasks) noexcept
         task->set_next( nullptr );
         if( task_list != nullptr )
         {
-            task_buffer_.put_task(task_list);
+            task_buffer_.put_items_list(task_list);
             have_more_tasks = true;
         }
     }

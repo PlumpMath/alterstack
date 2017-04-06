@@ -8,6 +8,8 @@ endif()
 set(COMMON_LIBS ${COMMON_LIBS} -latomic)
 
 add_subdirectory( integration )
+add_subdirectory( load )
+add_subdirectory( unit )
 
 #add_executable(test_gai
 #    TestGai.cpp
@@ -41,11 +43,7 @@ target_link_libraries( gai_check ${COMMON_LIBS} )
 add_library( catch_main STATIC catch_main.cpp )
 
 # FIXME: temporary disable tests
-#add_executable( task_buffer
-#    task_buffer.cpp
-#)
-#target_link_libraries( task_buffer catch_main ${COMMON_LIBS})
-#add_test( task_buffer task_buffer )
+
 
 ## load test
 #add_executable( load_task_buffer
@@ -72,5 +70,4 @@ add_library( catch_main STATIC catch_main.cpp )
 #target_link_libraries( load_running_queue ${COMMON_LIBS} Threads::Threads)
 # === FIXME: temporary disable tests
 
-add_executable( load_futex ./load_test/load_futex.cpp )
-target_link_libraries( load_futex Threads::Threads )
+

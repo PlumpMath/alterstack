@@ -84,7 +84,7 @@ private:
     friend class BgThread;
 };
 
-inline void Scheduler::post_jump_fcontext(Passkey<Task>, scontext::transfer_t transfer)
+inline void Scheduler::post_jump_fcontext( Passkey<Task>, scontext::transfer_t transfer )
 {
     post_jump_fcontext( transfer );
 }

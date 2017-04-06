@@ -49,7 +49,7 @@ class TaskRunner;
 class Scheduler;
 class Awaitable;
 template<typename Task>
-class TaskBuffer;
+class BoundBuffer;
 template<typename Task>
 class TaskStack;
 template<typename Task>
@@ -100,7 +100,7 @@ private:
 private:
     friend class Scheduler;
     friend class Awaitable;
-    friend class TaskBuffer<Task>;
+    friend class BoundBuffer<Task>;
     friend class TaskStack<Task>;
     friend class RunningQueue<Task>;
     friend class UnitTestAccessor;

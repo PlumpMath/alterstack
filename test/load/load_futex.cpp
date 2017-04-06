@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Alexey Syrnikov <san@masterspline.net>
+ * Copyright 2016,2017 Alexey Syrnikov <san@masterspline.net>
  *
  * This file is part of Alterstack.
  *
