@@ -46,11 +46,6 @@ add_library( catch_main STATIC catch_main.cpp )
 
 
 ## load test
-#add_executable( task_stack
-#    task_stack.cpp
-#)
-#target_link_libraries( task_stack catch_main ${COMMON_LIBS} )
-#add_test( task_stack task_stack )
 
 #add_executable( running_queue
 #    running_queue.cpp

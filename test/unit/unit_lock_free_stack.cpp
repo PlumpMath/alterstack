@@ -23,35 +23,19 @@
 
 #include <catch.hpp>
 
-#include "alterstack/task_stack.hpp"
 #include "alterstack/intrusive_list.hpp"
+#include "alterstack/lock_free_stack.hpp"
 
-namespace alterstack
+class Item : public alterstack::IntrusiveList<Item>
 {
-class Task : public IntrusiveList<Task>
-{
-private:
-    friend class TaskStack<Task>;
-    friend class UnitTestAccessor;
 };
 
-class UnitTestAccessor
-{
-public:
-    static alterstack::Task* get_next(alterstack::Task* task)
-    {
-        return task->next();
-    }
-};
-}
-
-using alterstack::TaskStack;
-using alterstack::Task;
+using ItemsStack = alterstack::LockFreeStack<Item>;
 
 TEST_CASE("API check")
 {
-    TaskStack<Task> stack;
-    SECTION( "empty TaskStack returns nullptr" )
+    ItemsStack stack;
+    SECTION( "empty LockFreeStack returns nullptr" )
     {
         for(int i = 0; i < 16; ++i )
         {
@@ -60,32 +44,32 @@ TEST_CASE("API check")
     }
     SECTION( "first push returns true, next false, push after pop_all returns true" )
     {
-        std::vector<alterstack::Task> tasks(100);
-        bool res = stack.push(&tasks[0]);
+        std::vector<Item> items(100);
+        bool res = stack.push(&items[0]);
         REQUIRE( res == true );
-        for( unsigned i = 1; i < tasks.size(); ++i)
+        for( unsigned i = 1; i < items.size(); ++i)
         {
-            res = stack.push(&tasks[i]);
+            res = stack.push(&items[i]);
             REQUIRE( res == false );
         }
         stack.pop_all();
-        tasks.clear();
-        tasks.resize(100);
-        res = stack.push(&tasks[0]);
+        items.clear();
+        items.resize(100);
+        res = stack.push(&items[0]);
         REQUIRE( res == true );
-        for( unsigned i = 1; i < tasks.size(); ++i)
+        for( unsigned i = 1; i < items.size(); ++i)
         {
-            res = stack.push(&tasks[i]);
+            res = stack.push(&items[i]);
             REQUIRE( res == false );
         }
     }
     SECTION( "filled by one element returns it" )
     {
-        alterstack::Task task;
-        stack.push(&task);
-        alterstack::Task* got_task = stack.pop_all();
-        REQUIRE( got_task == &task );
-        REQUIRE( alterstack::UnitTestAccessor::get_next(got_task) == nullptr );
+        Item item;
+        stack.push( &item );
+        Item* got_item = stack.pop_all();
+        REQUIRE( got_item == &item );
+        REQUIRE( got_item->next() == nullptr );
         SECTION( "and after that returns nullptr" )
         {
             for(int i = 0; i < 100; ++i )
@@ -94,27 +78,26 @@ TEST_CASE("API check")
             }
         }
     }
-    constexpr int TASKS_COUNT = 100;
-    std::vector<alterstack::Task> tasks(TASKS_COUNT);
+    constexpr int ITEMS_COUNT = 100;
+    std::vector<Item> items(ITEMS_COUNT);
     SECTION( "pop_all returns the same set of tasks, that push store" )
     {
-        for(auto& task: tasks)
+        for( auto& item: items )
         {
-            stack.push(&task);
+            stack.push( &item );
         }
-        alterstack::Task* task_list = stack.pop_all();
-        std::set<alterstack::Task*> task_set;
-        do
+        Item* items_list = stack.pop_all();
+        std::set<Item*> items_set;
+        while( items_list != nullptr )
         {
-            task_set.insert(task_list);
+            items_set.insert( items_list );
+            items_list = items_list->next();
         }
-        while( (task_list = alterstack::UnitTestAccessor::get_next(task_list))
-               != nullptr );
-        REQUIRE( task_set.size() == TASKS_COUNT );
-        for(auto& task: tasks)
+        REQUIRE( items_set.size() == ITEMS_COUNT );
+        for( auto& item: items)
         {
-            REQUIRE( task_set.find(&task) != task_set.end() );
-            task_set.erase(&task);
+            REQUIRE( items_set.find( &item ) != items_set.end() );
+            items_set.erase( &item );
         }
     }
 }

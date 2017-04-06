@@ -20,7 +20,7 @@
 #pragma once
 
 #include "bound_buffer.hpp"
-#include "task_stack.hpp"
+#include "lock_free_stack.hpp"
 
 namespace alterstack
 {
@@ -55,8 +55,8 @@ public:
     void put_task(Task* task) noexcept;
 
 private:
-    BoundBuffer<Task> task_buffer_;
-    TaskStack<Task>  task_stack_;
+    BoundBuffer<Task>   task_buffer_;
+    LockFreeStack<Task> task_stack_;
 };
 
 template<typename Task>

@@ -51,7 +51,7 @@ class Awaitable;
 template<typename Task>
 class BoundBuffer;
 template<typename Task>
-class TaskStack;
+class LockFreeStack;
 template<typename Task>
 class RunningQueue;
 /**
@@ -101,7 +101,7 @@ private:
     friend class Scheduler;
     friend class Awaitable;
     friend class BoundBuffer<Task>;
-    friend class TaskStack<Task>;
+    friend class LockFreeStack<Task>;
     friend class RunningQueue<Task>;
     friend class UnitTestAccessor;
     friend class BgRunner;
