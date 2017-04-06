@@ -46,11 +46,6 @@ add_library( catch_main STATIC catch_main.cpp )
 
 
 ## load test
-#add_executable( load_task_buffer
-#    ./load_test/load_task_buffer.cpp
-#)
-#target_link_libraries( load_task_buffer ${COMMON_LIBS} Threads::Threads )
-
 #add_executable( task_stack
 #    task_stack.cpp
 #)

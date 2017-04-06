@@ -25,52 +25,36 @@
 
 #include <catch.hpp>
 
-#include "alterstack/task_buffer.hpp"
+#include "alterstack/bound_buffer.hpp"
 #include "alterstack/intrusive_list.hpp"
 
-namespace alterstack
+class Item : public alterstack::IntrusiveList<Item>
 {
-class Task : private IntrusiveList<Task>
-{
-private:
-    friend class TaskBuffer<Task>;
-    friend class UnitTestAccessor;
 };
 
-class UnitTestAccessor
-{
-public:
-    static alterstack::Task* get_next(alterstack::Task* task)
-    {
-        return task->next();
-    }
-};
-}
+using alterstack::BoundBuffer;
 
-using alterstack::TaskBuffer;
-using alterstack::Task;
-
-TaskBuffer<Task> buffer;
-constexpr int TASKS_COUNT = 1000;
-std::vector<Task> tasks(TASKS_COUNT);
+BoundBuffer<Item> buffer;
+constexpr int ITEMS_COUNT = 1000;
+std::vector<Item> items( ITEMS_COUNT);
 
 void thread_function()
 {
     for(int i = 0; i < 10000; ++i)
     {
-        alterstack::Task* task;
-        std::set<alterstack::Task*> task_set;
+        Item* item;
+        std::set<Item*> item_set;
         bool have_more_tasks = false;
-        while( (task = buffer.get_task(have_more_tasks)) != nullptr )
+        while( ( item = buffer.get_item( have_more_tasks )) != nullptr )
         {
-            if( alterstack::UnitTestAccessor::get_next(task) != nullptr )
+            if( item->next() != nullptr )
             {
-                std::cerr << "got not single Task*\n";
-                std::cerr << "task " << task << "\n";
-                std::cerr << "next " << alterstack::UnitTestAccessor::get_next(task) << "\n";
+                std::cerr << "got not single Item*\n";
+                std::cerr << "item " << item << "\n";
+                std::cerr << "next " << item->next() << "\n";
                 exit(1);
             }
-            task_set.insert(task);
+            item_set.insert( item );
         }
 //        for(auto& task: tasks)
 //        {
@@ -80,11 +64,11 @@ void thread_function()
 //                exit(1);
 //            }
 //        }
-        for( auto& task: task_set)
+        for( auto& item: item_set)
         {
-            buffer.put_task(task);
+            buffer.put_items_list( item );
         }
-        task_set.clear();
+        item_set.clear();
     }
 }
 
@@ -94,39 +78,39 @@ int main()
     {
         std::cerr << "Buffer unaligned " << &buffer << "\n";
     }
-    for(auto& task: tasks)
+    for(auto& task: items)
     {
-        buffer.put_task(&task);
+        buffer.put_items_list( &task );
     }
 
     std::thread t1(thread_function);
     std::thread t2(thread_function);
     t1.join();
     t2.join();
-    alterstack::Task* task;
-    std::set<alterstack::Task*> task_set;
+    Item* item;
+    std::set<Item*> item_set;
     bool have_more_tasks = false;
-    while( (task = buffer.get_task(have_more_tasks)) != nullptr )
+    while( (item = buffer.get_item( have_more_tasks )) != nullptr )
     {
-        if( alterstack::UnitTestAccessor::get_next(task) != nullptr )
+        if( item->next() != nullptr )
         {
-            std::cerr << "got not single Task*\n";
-            std::cerr << "task " << task << "\n";
-            std::cerr << "next " << alterstack::UnitTestAccessor::get_next(task) << "\n";
+            std::cerr << "got not single Item*\n";
+            std::cerr << "item " << item << "\n";
+            std::cerr << "next " << item->next() << "\n";
             exit(1);
         }
-        task_set.insert(task);
+        item_set.insert( item );
     }
-    if( task_set.size() != TASKS_COUNT )
+    if( item_set.size() != ITEMS_COUNT )
     {
-        std::cerr << "task_set.size() != TASKS_COUNT\n";
+        std::cerr << "item_set.size() != ITEMS_COUNT\n";
         exit(1);
     }
-    for(auto& task: tasks)
+    for( auto& item: items)
     {
-        if( task_set.find(&task) == task_set.end() )
+        if( item_set.find( &item ) == item_set.end() )
         {
-            std::cerr << "Got task " << &task << " not from initial array\n";
+            std::cerr << "Got item " << &item << " not from initial array\n";
             exit(1);
         }
     }
