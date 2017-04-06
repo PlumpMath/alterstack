@@ -41,23 +41,3 @@ add_executable( gai_check
 target_link_libraries( gai_check ${COMMON_LIBS} )
 
 add_library( catch_main STATIC catch_main.cpp )
-
-# FIXME: temporary disable tests
-
-
-## load test
-
-#add_executable( running_queue
-#    running_queue.cpp
-#)
-#target_link_libraries( running_queue catch_main ${COMMON_LIBS} )
-#add_test( running_queue running_queue )
-
-# load test
-#add_executable( load_running_queue
-#    ./load_test/load_running_queue.cpp
-#)
-#target_link_libraries( load_running_queue ${COMMON_LIBS} Threads::Threads)
-# === FIXME: temporary disable tests
-
-

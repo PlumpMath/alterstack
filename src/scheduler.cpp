@@ -192,7 +192,7 @@ Task* Scheduler::get_native_task()
 Task* Scheduler::get_running_from_queue() noexcept
 {
     bool have_more_tasks = false;
-    Task* task = running_queue_.get_task(have_more_tasks);
+    Task* task = running_queue_.get_item(have_more_tasks);
     LOG << "Scheduler::get_next_from_queue: got task " << task << " from running queue\n";
     if( task != nullptr
             && have_more_tasks)
@@ -223,7 +223,7 @@ void Scheduler::enqueue_alternative_task(Task *task) noexcept
 {
     assert(task != nullptr);
     auto& scheduler = instance();
-    scheduler.running_queue_.put_task(task);
+    scheduler.running_queue_.put_item(task);
     LOG << "Scheduler::enqueue_alternative_task: task " << task
         << " stored in running task queue\n";
     scheduler.bg_runner_.notify();

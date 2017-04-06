@@ -12,3 +12,8 @@ add_executable( unit_lock_free_stack
 target_link_libraries( unit_lock_free_stack catch_main ${COMMON_LIBS} )
 add_test( unit_lock_free_stack unit_lock_free_stack )
 
+add_executable( unit_lock_free_queue
+    unit_lock_free_queue.cpp
+)
+target_link_libraries( unit_lock_free_queue catch_main ${COMMON_LIBS} )
+add_test( unit_lock_free_queue unit_lock_free_queue )

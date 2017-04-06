@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "running_queue.hpp"
+#include "lock_free_queue.hpp"
 #include "awaitable.hpp"
 #include "task_runner.hpp"
 #include "context.hpp"
@@ -31,7 +31,7 @@
 namespace alterstack
 {
 class Task;
-
+using RunningQueue = LockFreeQueue<Task>;
 /**
  * @brief Tasks scheduler.
  *
@@ -70,7 +70,7 @@ private:
     static Task* get_current_task();
 
     BgRunner bg_runner_;
-    RunningQueue<Task> running_queue_;
+    RunningQueue running_queue_;
 
 public:
     static void  add_running_task(Task* task) noexcept;

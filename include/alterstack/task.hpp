@@ -53,7 +53,7 @@ class BoundBuffer;
 template<typename Task>
 class LockFreeStack;
 template<typename Task>
-class RunningQueue;
+class LockFreeQueue;
 /**
  * @brief Main class to start and wait tasks.
  *
@@ -102,7 +102,7 @@ private:
     friend class Awaitable;
     friend class BoundBuffer<Task>;
     friend class LockFreeStack<Task>;
-    friend class RunningQueue<Task>;
+    friend LockFreeQueue<Task>;
     friend class UnitTestAccessor;
     friend class BgRunner;
 };

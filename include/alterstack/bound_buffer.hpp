@@ -44,6 +44,11 @@ class alignas(64) BoundBuffer
 {
 public:
     BoundBuffer() noexcept;
+
+    BoundBuffer( const BoundBuffer& ) = delete;
+    BoundBuffer( BoundBuffer&& )      = delete;
+    BoundBuffer& operator=( const BoundBuffer& ) = delete;
+    BoundBuffer& operator=( BoundBuffer&& )      = delete;
     /**
      * @brief get T* or nullptr from BoundBuffer
      *
