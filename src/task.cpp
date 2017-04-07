@@ -100,19 +100,18 @@ void Task::wait()
         return;
     }
     LOG << "Task::wait: running Awaitable::wait()\n";
-    awaitable_.wait();
+    m_awaitable.wait();
 }
 
 void Task::_run_wrapper( ::scontext::transfer_t transfer ) noexcept
 {
     try
     {
-        Task* current = nullptr;
+        Task* current = Scheduler::get_current_task();
         {
             LOG << "Task::_run_wrapper: started\n";
-            Scheduler::post_jump_fcontext( {}, transfer );
+            Scheduler::post_jump_fcontext( {}, transfer, current );
 
-            current = Scheduler::get_current_task();
             current->m_runnable();
             LOG << "Task::_run_wrapper: runnable finished, cleaning Task\n";
             current->release();

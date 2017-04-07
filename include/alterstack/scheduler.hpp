@@ -20,10 +20,7 @@
 #pragma once
 
 #include "lock_free_queue.hpp"
-#include "awaitable.hpp"
 #include "task_runner.hpp"
-#include "context.hpp"
-#include "task.hpp"
 #include "bg_runner.hpp"
 #include "passkey.hpp"
 #include "logger.hpp"
@@ -53,7 +50,9 @@ public:
     static bool schedule( Task* current_task = get_current_task() );
     static void run_new_task(Task *task);
 
-    static void post_jump_fcontext( Passkey<Task>,  ::scontext::transfer_t transfer );
+    static void post_jump_fcontext( Passkey<Task>
+                                    , ::scontext::transfer_t transfer
+                                    , Task* current_task );
 
 private:
     bool do_schedule( Task* current_task );
@@ -61,7 +60,8 @@ private:
     static Scheduler& instance();
 
     static void switch_to(Task* new_task );
-    static void post_jump_fcontext( ::scontext::transfer_t transfer );
+    static void post_jump_fcontext( ::scontext::transfer_t transfer
+                                    ,Task* current_task );
 
     Task* get_next_task( Task* current_task );
     Task* get_running_from_queue() noexcept;
@@ -69,7 +69,7 @@ private:
     static Task* get_native_task();
     static Task* get_current_task();
 
-    BgRunner bg_runner_;
+    BgRunner     bg_runner_;
     RunningQueue running_queue_;
 
 public:
@@ -84,9 +84,11 @@ private:
     friend class BgThread;
 };
 
-inline void Scheduler::post_jump_fcontext( Passkey<Task>, scontext::transfer_t transfer )
+inline void Scheduler::post_jump_fcontext( Passkey<Task>
+                                           , scontext::transfer_t transfer
+                                           , Task* current_task )
 {
-    post_jump_fcontext( transfer );
+    post_jump_fcontext( transfer, current_task );
 }
 
 /**

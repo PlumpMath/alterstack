@@ -45,7 +45,7 @@ public:
 
     static TaskRunner& current();
     static Task* current_task();
-    static void  set_task( Task* new_task );
+    static void  set_current_task( Task* new_task );
     static Task* native_task();
     RunnerType   type();
 
@@ -76,7 +76,7 @@ inline Task* TaskRunner::current_task()
     return current().m_current_task;
 }
 
-inline void TaskRunner::set_task(Task *new_task)
+inline void TaskRunner::set_current_task(Task *new_task)
 {
     current().m_current_task = new_task;
 }

@@ -89,12 +89,11 @@ private:
     bool is_thread_bound() noexcept;
     TaskState state() const noexcept;
 
-    Awaitable  awaitable_;
-    Context    m_context;
+    Awaitable              m_awaitable;
+    std::atomic<Context>   m_context;
+    std::atomic<TaskState> m_state;
 
-    std::atomic<TaskState>  m_state;
-
-    std::unique_ptr<Stack>  m_stack;
+    std::unique_ptr<Stack> m_stack;
     ::std::function<void()> m_runnable;
     bool m_is_thread_bound;
 private:
@@ -114,7 +113,7 @@ private:
  */
 inline void Task::release()
 {
-    awaitable_.release();
+    m_awaitable.release();
 }
 
 inline TaskState Task::state(Passkey<Scheduler>) const noexcept

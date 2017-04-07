@@ -121,7 +121,7 @@ void Scheduler::switch_to( Task* new_task )
     Task* old_task = get_current_task();
     LOG << "Scheduler::switch_to old_task -> new_task(m_context): "
         << old_task << " -> " << new_task << " (" << new_task->m_context << ")\n";
-    TaskRunner::set_task( new_task );
+    TaskRunner::set_current_task( new_task );
     ::scontext::transfer_t transfer = ::scontext::jump_fcontext(
                 new_task->m_context
                 ,(void*)old_task );
@@ -136,16 +136,17 @@ void Scheduler::switch_to( Task* new_task )
     // prev - is context I came back from (after new context, and other
     // did it's work)
 
-    post_jump_fcontext( transfer );
+    post_jump_fcontext( transfer, old_task );
 }
 /**
  * @brief store old task in running queue, if it is not nullptr and is AlterNative
  * @param old_task task to store
  */
-void Scheduler::post_jump_fcontext( ::scontext::transfer_t transfer )
+void Scheduler::post_jump_fcontext( ::scontext::transfer_t transfer, Task* current_task )
 {
     LOG << "Scheduler::post_jump_fcontext\n";
 
+    current_task->m_context = nullptr;
     Task* prev_task = (Task*)transfer.data;
     if( prev_task->m_state.load( std::memory_order_relaxed ) == TaskState::Finished )
     {
@@ -173,7 +174,7 @@ Task* Scheduler::get_current_task()
 {
     if ( TaskRunner::current_task() == nullptr )
     {
-        TaskRunner::set_task( TaskRunner::native_task() );
+        TaskRunner::set_current_task( TaskRunner::native_task() );
     }
     return TaskRunner::current_task();
 }
