@@ -67,17 +67,16 @@ Task::~Task()
     release();
     if( is_thread_bound() )
     {
-        m_state = TaskState::Clear;  // unbound Task will be marked as Clear in _run_wrapper()
+        m_state = TaskState::Finished;  // unbound Task will be marked as Clear in _run_wrapper()
         return;
     }
     //wait(); // FIXME: remove this
-    while( m_state != TaskState::Clear )
+    while( m_state != TaskState::Finished
+           || m_context == nullptr ) // FIXME: ALL threads can wait on ~Task!!!
     {
-        yield();
-        if( m_state != TaskState::Clear )
-        {
-            ::std::this_thread::yield();
-        }
+        LOG << "~Task() state " << static_cast<uint32_t>(m_state.load())
+            << " context " << m_context << "/n";
+        ::std::this_thread::yield();
     }
 }
 /**
@@ -95,7 +94,7 @@ void Task::yield()
  */
 void Task::join()
 {
-    if( m_state == TaskState::Clear )
+    if( m_state == TaskState::Finished )
     {
         LOG << "Task::wait: Task finished, nothing to wait\n";
         return;
@@ -115,9 +114,9 @@ void Task::_run_wrapper( ::scontext::transfer_t transfer ) noexcept
 
             current->m_runnable();
             LOG << "Task::_run_wrapper: runnable finished, cleaning Task\n";
-            current->m_state.store( TaskState::Finished, std::memory_order_relaxed );
             current->release();
-        } // here all local objects NUST be destroyed because switch_to() will not return
+            current->m_state.store( TaskState::Finished, std::memory_order_release );
+        } // here all local objects NUST be destroyed because schedule() will never return
         Scheduler::schedule( current );
         // This line is unreachable,
         // because current context will never scheduled

@@ -71,7 +71,6 @@ private:
     static Task* get_current_task();
 
     static void add_waiting_list_to_running( Task* task_list ) noexcept;
-    static void enqueue_task( Task* task ) noexcept;
     static void enqueue_unbound_task(Task* task) noexcept;
     static void wait_while_context_is_null( std::atomic<Context>* context ) noexcept;
 

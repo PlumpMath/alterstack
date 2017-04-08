@@ -148,16 +148,16 @@ void Scheduler::post_jump_fcontext( ::scontext::transfer_t transfer, Task* curre
 
     current_task->m_context = nullptr;
     Task* prev_task = (Task*)transfer.data;
-    if( prev_task->m_state.load( std::memory_order_relaxed ) == TaskState::Finished )
-    {
-        prev_task->m_state.store( TaskState::Clear, std::memory_order_release );
-        LOG << "Scheduler::post_jump_fcontext prev::m_state = Finished\n";
-    }
-    else
-    {
+//    if( prev_task->m_state.load( std::memory_order_relaxed ) == TaskState::Finished )
+//    {
+//        prev_task->m_state.store( TaskState::Clear, std::memory_order_release );
+//        LOG << "Scheduler::post_jump_fcontext prev::m_state = Finished\n";
+//    }
+//    else
+//    {
         prev_task->m_context = transfer.fctx;
         LOG << "Scheduler::post_jump_fcontext saved prev_task m_context " << transfer.fctx << "\n";
-    }
+    //}
 
     if( !prev_task->is_thread_bound()
             && prev_task->m_state == TaskState::Running )
@@ -305,16 +305,29 @@ void Scheduler::add_waiting_list_to_running( Task* task_list ) noexcept
         task_list  = task_list->next();
         task->set_next( nullptr );
         task->m_state = TaskState::Running;
-        if( task->m_context.load( std::memory_order_acquire ) == nullptr )
-        { // if m_context == nullptr, Task still running. Will wait for m_context != nullptr
-            task->set_next( null_context_tasks );
-            null_context_tasks = task;
-            LOG << "Scheduler::add_waiting_list_to_running: task " << task
-                << " m_context == nullptr\n";
-            continue;
+        if( task->is_thread_bound() )
+        {
+            LOG << "Scheduler::add_waiting_list_to_running: task " << task <<
+                   " is Thread bound, marking Ready and notifying\n";
+            TaskRunner::current().native_futex.notify();
         }
-        enqueue_task( task );
+        else
+        {
+            if( task->m_context.load( std::memory_order_acquire ) == nullptr )
+            { // if m_context == nullptr, Task still running.
+              // Will delay enqueueing it in Running queue untill m_context != nullptr
+                task->set_next( null_context_tasks );
+                null_context_tasks = task;
+                LOG << "Scheduler::add_waiting_list_to_running: task " << task
+                    << " m_context == nullptr\n";
+                continue;
+            }
+            LOG << "Scheduler::add_waiting_list_to_running: task " << task <<
+                   " is unbound Task, enqueueing in running queue\n";
+            enqueue_unbound_task( task );
+        }
     }
+    // Add delayed unbound Task's to running queue
     while( null_context_tasks != nullptr )
     {
         Task* task = null_context_tasks;
@@ -324,23 +337,7 @@ void Scheduler::add_waiting_list_to_running( Task* task_list ) noexcept
         {
             wait_while_context_is_null( &task->m_context );
         }
-        enqueue_task( task );
-    }
-}
-
-void Scheduler::enqueue_task( Task* task ) noexcept
-{
-    if( task->is_thread_bound() )
-    {
-        LOG << "Scheduler::enqueue_task: task " << task <<
-               " is Thread bound, marking Ready and notifying\n";
-        TaskRunner::current().native_futex.notify();
-    }
-    else
-    {
-        LOG << "Scheduler::enqueue_task: task " << task <<
-               " is unbound Task, enqueueing in running queue\n";
-        Scheduler::enqueue_unbound_task( task );
+        enqueue_unbound_task( task );
     }
 }
 

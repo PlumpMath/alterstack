@@ -37,12 +37,7 @@ enum class TaskState
 {
     Running,
     Waiting,
-    Finished, ///< Task function finished, but it's stack can still be in use, so it's temporary
-              /// state to Clear
-    Clear    ///< this state MUST be set (atomically) after context switch
-             /// because Task destructor in some thread can exit in case TaskState == Clear
-             /// and Task memory can be freed so nobody can read or write Task data in parallel
-             /// thread if TaskState == Clear (Task stack also MUST be not used)
+    Finished,
 };
 
 class TaskRunner;
