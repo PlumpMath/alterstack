@@ -53,13 +53,13 @@ int main()
 
     Task con_task10{ ctx_function2 };
     std::cout << "Returned to fcm after run\n";
-    con_task10.wait();
+    con_task10.join();
     Task con_task11{ ::std::bind(ctx_arg1, 0) };
     Task con_task12{ ::std::bind(ctx_arg1, 11) };
 
     Task::yield();
     std::cout << "Returned to main\n";
-    con_task2.wait();
+    con_task2.join();
     return 0;
 }
 

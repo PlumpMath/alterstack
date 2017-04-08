@@ -64,12 +64,13 @@ Task::Task( Passkey<TaskRunner> )
 Task::~Task()
 {
     LOG << "Task::~Task: " << this << "\n";
+    release();
     if( is_thread_bound() )
     {
         m_state = TaskState::Clear;  // unbound Task will be marked as Clear in _run_wrapper()
         return;
     }
-    wait();
+    //wait(); // FIXME: remove this
     while( m_state != TaskState::Clear )
     {
         yield();
@@ -92,7 +93,7 @@ void Task::yield()
  *
  * If this already finished return immediately
  */
-void Task::wait()
+void Task::join()
 {
     if( m_state == TaskState::Clear )
     {
@@ -114,8 +115,8 @@ void Task::_run_wrapper( ::scontext::transfer_t transfer ) noexcept
 
             current->m_runnable();
             LOG << "Task::_run_wrapper: runnable finished, cleaning Task\n";
-            current->release();
             current->m_state.store( TaskState::Finished, std::memory_order_relaxed );
+            current->release();
         } // here all local objects NUST be destroyed because switch_to() will not return
         Scheduler::schedule( current );
         // This line is unreachable,

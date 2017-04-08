@@ -74,8 +74,7 @@ public:
     Task& operator=(Task&&)      = delete;
 
     static void yield();
-    void wait();
-    void release();
+    void join();
 
     TaskState state( Passkey<Scheduler> ) const noexcept;
 
@@ -88,6 +87,7 @@ private:
     static void _run_wrapper( ::scontext::transfer_t transfer ) noexcept;
     bool is_thread_bound() noexcept;
     TaskState state() const noexcept;
+    void release();
 
     Awaitable              m_awaitable;
     std::atomic<Context>   m_context;
@@ -106,16 +106,6 @@ private:
     friend class BgRunner;
 };
 
-/**
- * @brief release all Tasks waiting this.
- *
- * release() is threadsafe
- */
-inline void Task::release()
-{
-    m_awaitable.release();
-}
-
 inline TaskState Task::state(Passkey<Scheduler>) const noexcept
 {
     return state();
@@ -123,6 +113,16 @@ inline TaskState Task::state(Passkey<Scheduler>) const noexcept
 inline TaskState Task::state() const noexcept
 {
     return m_state.load( std::memory_order_acquire );
+}
+
+/**
+ * @brief release all Tasks join()'ed this Task.
+ *
+ * release() is threadsafe
+ */
+inline void Task::release()
+{
+    m_awaitable.release();
 }
 
 inline bool Task::is_thread_bound() noexcept
