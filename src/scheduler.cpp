@@ -163,7 +163,7 @@ void Scheduler::post_jump_fcontext( ::scontext::transfer_t transfer, Task* curre
             && prev_task->m_state == TaskState::Running )
     {
         LOG << "Scheduler::post_jump_fcontext: enqueueing old task\n";
-        enqueue_alternative_task(prev_task);
+        enqueue_unbound_task(prev_task);
     }
 }
 /**
@@ -220,7 +220,7 @@ Task* Scheduler::get_running_from_native()
  * @param task task to store
  * get_next_from_native() is threadsafe
  */
-void Scheduler::enqueue_alternative_task(Task *task) noexcept
+void Scheduler::enqueue_unbound_task(Task *task) noexcept
 {
     assert(task != nullptr);
     auto& scheduler = instance();
@@ -228,6 +228,28 @@ void Scheduler::enqueue_alternative_task(Task *task) noexcept
     LOG << "Scheduler::enqueue_alternative_task: task " << task
         << " stored in running task queue\n";
     scheduler.bg_runner_.notify();
+}
+/**
+ * @brief wait for Task::m_context becomes not null
+ *
+ * m_context can be nullptr in case some Task makes waiting, another thread
+ * release that waiting queue, but first thread still did not switch context
+ * (so first task context still running on some thread). In this case Task
+ * from waiting queue become running, but it MUST not be inserted in running queue
+ * because some other thread can try to switch to it (even first thread can try
+ * to switch to it's own context)
+ * @param context Context*
+ */
+void Scheduler::wait_while_context_is_null( std::atomic<Context>* context ) noexcept
+{
+    LOG << "Scheduler::wait_while_context_is_null() waiting for " << context << "\n";
+    if( context->load( std::memory_order_acquire ) == nullptr )
+    {
+        std::this_thread::sleep_for( std::chrono::microseconds(2) );
+        while( context->load( std::memory_order_acquire ) == nullptr )
+            std::this_thread::sleep_for( std::chrono::microseconds(10) );
+    }
+    LOG << "Scheduler::wait_while_context_is_null() waiting finished for " << context << "\n";
 }
 /**
  * @brief get next Task* to run using schedule algorithm of Scheduler
@@ -274,20 +296,51 @@ Task *Scheduler::get_next_task( Task *current_task )
  * task must NOT be in any queue (because of multithreading)
  * @param task pointer to running Task
  */
-void Scheduler::add_running_task( Task* task ) noexcept
+void Scheduler::add_waiting_list_to_running( Task* task_list ) noexcept
 {
-    task->m_state = TaskState::Running;
+    Task* null_context_tasks = nullptr;
+    while( task_list != nullptr )
+    {
+        Task* task = task_list;
+        task_list  = task_list->next();
+        task->set_next( nullptr );
+        task->m_state = TaskState::Running;
+        if( task->m_context.load( std::memory_order_acquire ) == nullptr )
+        { // if m_context == nullptr, Task still running. Will wait for m_context != nullptr
+            task->set_next( null_context_tasks );
+            null_context_tasks = task;
+            LOG << "Scheduler::add_waiting_list_to_running: task " << task
+                << " m_context == nullptr\n";
+            continue;
+        }
+        enqueue_task( task );
+    }
+    while( null_context_tasks != nullptr )
+    {
+        Task* task = null_context_tasks;
+        null_context_tasks = null_context_tasks->next();
+        task->set_next( nullptr );
+        while( task->m_context.load( std::memory_order_acquire ) == nullptr )
+        {
+            wait_while_context_is_null( &task->m_context );
+        }
+        enqueue_task( task );
+    }
+}
+
+void Scheduler::enqueue_task( Task* task ) noexcept
+{
     if( task->is_thread_bound() )
     {
-        LOG << "Scheduler::enqueue_running_task: task " << task <<
-               " is Native, marking Ready and notifying\n";
+        LOG << "Scheduler::enqueue_task: task " << task <<
+               " is Thread bound, marking Ready and notifying\n";
         TaskRunner::current().native_futex.notify();
     }
-    else // AlterNative or BgRunner
+    else
     {
-        LOG << "Scheduler::enqueue_running_task: task " << task <<
-               " is AlterNative, enqueueing in running queue\n";
-        Scheduler::enqueue_alternative_task(task);
+        LOG << "Scheduler::enqueue_task: task " << task <<
+               " is unbound Task, enqueueing in running queue\n";
+        Scheduler::enqueue_unbound_task( task );
     }
 }
 

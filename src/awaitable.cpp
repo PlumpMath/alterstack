@@ -18,6 +18,7 @@
  */
 
 #include "alterstack/awaitable.hpp"
+
 #include "alterstack/scheduler.hpp"
 #include "alterstack/task_runner.hpp"
 #include "alterstack/logger.hpp"
@@ -123,14 +124,8 @@ void Awaitable::release()
     }
     LOG << "Awaitable::release: post CAS Awaitable m_next " << aw_data.head << "\n";
 
-    Task* next_task = aw_data.head;
-    while( next_task != nullptr )
-    {
-        Task* task = next_task;
-        // after wakeing up task can be deleted before next iteration in this loop
-        next_task = next_task->next();
-        Scheduler::add_running_task( task );
-    }
+    Task* task_list = aw_data.head;
+    Scheduler::add_waiting_list_to_running( {}, task_list );
 }
 
 }

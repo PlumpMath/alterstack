@@ -90,7 +90,7 @@ private:
     void release();
 
     Awaitable              m_awaitable;
-    std::atomic<Context>   m_context;
+    std::atomic<Context>   m_context; // this always == nullptr, when some thread running this context
     std::atomic<TaskState> m_state;
 
     std::unique_ptr<Stack> m_stack;

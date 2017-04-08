@@ -48,17 +48,18 @@ private:
 
 public:
     static bool schedule( Task* current_task = get_current_task() );
-    static void run_new_task(Task *task);
+    static void run_new_task( Task *task );
 
     static void post_jump_fcontext( Passkey<Task>
                                     , ::scontext::transfer_t transfer
                                     , Task* current_task );
+    static void add_waiting_list_to_running( Passkey<Awaitable>, Task* task_list ) noexcept;
 
 private:
-    bool do_schedule( Task* current_task );
-    void do_schedule_new_task(Task *task);
     static Scheduler& instance();
 
+    bool do_schedule( Task* current_task );
+    void do_schedule_new_task(Task *task);
     static void switch_to(Task* new_task );
     static void post_jump_fcontext( ::scontext::transfer_t transfer
                                     ,Task* current_task );
@@ -69,13 +70,13 @@ private:
     static Task* get_native_task();
     static Task* get_current_task();
 
+    static void add_waiting_list_to_running( Task* task_list ) noexcept;
+    static void enqueue_task( Task* task ) noexcept;
+    static void enqueue_unbound_task(Task* task) noexcept;
+    static void wait_while_context_is_null( std::atomic<Context>* context ) noexcept;
+
     BgRunner     bg_runner_;
     RunningQueue running_queue_;
-
-public:
-    static void  add_running_task(Task* task) noexcept;
-private:
-    static void  enqueue_alternative_task(Task* task) noexcept;
 
 private:
     friend class Task;
@@ -89,6 +90,11 @@ inline void Scheduler::post_jump_fcontext( Passkey<Task>
                                            , Task* current_task )
 {
     post_jump_fcontext( transfer, current_task );
+}
+
+inline void Scheduler::add_waiting_list_to_running( Passkey<Awaitable>, Task* task_list ) noexcept
+{
+    add_waiting_list_to_running( task_list);
 }
 
 /**
