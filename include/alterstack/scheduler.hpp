@@ -78,8 +78,9 @@ private:
     RunningQueue running_queue_;
 
 private:
-    friend class Task;
     friend class TaskBase;
+    friend class BoundTask;
+    friend class Task;
     friend class Awaitable;
     friend class BgRunner;
     friend class BgThread;

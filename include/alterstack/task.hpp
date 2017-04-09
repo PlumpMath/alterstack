@@ -57,10 +57,8 @@ class LockFreeQueue;
 class TaskBase : private IntrusiveList<TaskBase>
 {
 protected:
-    TaskBase( bool thread_bound );
+    TaskBase( bool is_thread_bound );
 public:
-    // FIXME: make this in factory
-    TaskBase( Passkey<TaskRunner> ); ///< will create thread bound Task
     virtual ~TaskBase();
 
     TaskBase() = delete;
@@ -68,7 +66,6 @@ public:
     TaskBase(TaskBase&&)      = delete;
     TaskBase& operator=(const TaskBase&) = delete;
     TaskBase& operator=(TaskBase&&)      = delete;
-
 
     void join();
 
@@ -80,8 +77,9 @@ protected:
     void release();
 
     Awaitable              m_awaitable;
-    std::atomic<Context>   m_context; // this always == nullptr, when some thread running this context
-    std::atomic<TaskState> m_state = { TaskState::Running };
+    // m_context == nullptr when some thread running this context
+    std::atomic<Context>   m_context = { nullptr };
+    std::atomic<TaskState> m_state   = { TaskState::Running };
     const bool m_is_thread_bound;
 
 private:
@@ -109,6 +107,12 @@ private:
     ::std::function<void()> m_runnable;
 };
 
+class BoundTask final : public TaskBase
+{
+public:
+    BoundTask( Passkey<TaskRunner> ); ///< will create thread bound Task
+    ~BoundTask();
+};
 inline TaskState TaskBase::state(Passkey<Scheduler>) const noexcept
 {
     return state();

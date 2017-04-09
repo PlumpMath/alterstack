@@ -32,8 +32,11 @@ namespace alterstack
 
 namespace ctx = ::scontext;
 
-TaskBase::TaskBase( bool thread_bound )
-    :m_is_thread_bound{ thread_bound }
+TaskBase::TaskBase( bool is_thread_bound )
+    :m_is_thread_bound{ is_thread_bound }
+{}
+
+TaskBase::~TaskBase()
 {}
 
 /**
@@ -67,21 +70,18 @@ Task::~Task()
 }
 /**
  * @brief constructor to create thread bound Task
- *
- * @param native_info points to RunnerInfo
  */
-
-TaskBase::TaskBase( Passkey<TaskRunner> )
-    :m_context(nullptr)
-    ,m_state( TaskState::Running )
-    ,m_is_thread_bound{ true }
+BoundTask::BoundTask(Passkey<TaskRunner>)
+    :TaskBase{ true }
 {}
+
 /**
  * @brief destructor will wait if Task still Running
  */
-TaskBase::~TaskBase()
+
+BoundTask::~BoundTask()
 {
-    LOG << "TaskBase::~TaskBase: " << this << "\n";
+    LOG << "~BoundTask: " << this << "\n";
     release();
     m_state = TaskState::Finished;  // unbound Task will be marked as Clear in _run_wrapper()
     return;

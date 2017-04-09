@@ -56,8 +56,8 @@ private:
     TaskRunner();
     void set_type( RunnerType type );
 
-    TaskBase  m_native_task;
-    TaskBase* m_current_task = nullptr;
+    BoundTask  m_native_task;
+    TaskBase*  m_current_task = nullptr;
     RunnerType m_runner_type;
 };
 
