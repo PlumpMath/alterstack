@@ -45,7 +45,7 @@ Awaitable::~Awaitable()
 
 bool Awaitable::insert_current_task_in_waitlist()
 {
-    Task* const current_task = Scheduler::get_current_task();
+    TaskBase* const current_task = Scheduler::get_current_task();
     AwaitableData aw_data = ::std::atomic_load_explicit(&m_data,::std::memory_order_acquire);
     LOG << "Awaitable::wait: current Task* " << current_task << "\n";
     LOG << "Awaitable::wait: Awaitable m_next " << aw_data.head << "\n";
@@ -124,7 +124,7 @@ void Awaitable::release()
     }
     LOG << "Awaitable::release: post CAS Awaitable m_next " << aw_data.head << "\n";
 
-    Task* task_list = aw_data.head;
+    TaskBase* task_list = aw_data.head;
     Scheduler::add_waiting_list_to_running( {}, task_list );
 }
 

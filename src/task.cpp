@@ -32,15 +32,18 @@ namespace alterstack
 
 namespace ctx = ::scontext;
 
+TaskBase::TaskBase( bool thread_bound )
+    :m_is_thread_bound{ thread_bound }
+{}
+
 /**
  * @brief constructor to create thread unbound Task
  * @param runnable void() function or functor to start
  */
 Task::Task( ::std::function<void()> runnable )
-    :m_state{ TaskState::Running }
+    :TaskBase{ false }
     ,m_stack{ new Stack() }
     ,m_runnable{ std::move(runnable) }
-    ,m_is_thread_bound{ false }
 {
     LOG << "Task::Task\n";
     m_context = ctx::make_fcontext( m_stack->stack_top(), m_stack->size(), _run_wrapper);
@@ -48,12 +51,27 @@ Task::Task( ::std::function<void()> runnable )
 
     Scheduler::run_new_task( this );
 }
+
+Task::~Task()
+{
+    LOG << "~Task(): unbound task " << this << "\n";
+    release();
+    while( m_state != TaskState::Finished
+           || m_context == nullptr )
+    {
+        LOG << "~Task() state " << static_cast<uint32_t>(m_state.load())
+            << " context " << m_context << "\n";
+        yield();
+        ::std::this_thread::yield();
+    }
+}
 /**
  * @brief constructor to create thread bound Task
  *
  * @param native_info points to RunnerInfo
  */
-Task::Task( Passkey<TaskRunner> )
+
+TaskBase::TaskBase( Passkey<TaskRunner> )
     :m_context(nullptr)
     ,m_state( TaskState::Running )
     ,m_is_thread_bound{ true }
@@ -61,23 +79,12 @@ Task::Task( Passkey<TaskRunner> )
 /**
  * @brief destructor will wait if Task still Running
  */
-Task::~Task()
+TaskBase::~TaskBase()
 {
-    LOG << "Task::~Task: " << this << "\n";
+    LOG << "TaskBase::~TaskBase: " << this << "\n";
     release();
-    if( is_thread_bound() )
-    {
-        m_state = TaskState::Finished;  // unbound Task will be marked as Clear in _run_wrapper()
-        return;
-    }
-    //wait(); // FIXME: remove this
-    while( m_state != TaskState::Finished
-           || m_context == nullptr ) // FIXME: ALL threads can wait on ~Task!!!
-    {
-        LOG << "~Task() state " << static_cast<uint32_t>(m_state.load())
-            << " context " << m_context << "/n";
-        ::std::this_thread::yield();
-    }
+    m_state = TaskState::Finished;  // unbound Task will be marked as Clear in _run_wrapper()
+    return;
 }
 /**
  * @brief yield current Task, schedule next (if avalable), current stay running
@@ -92,7 +99,7 @@ void Task::yield()
  *
  * If this already finished return immediately
  */
-void Task::join()
+void TaskBase::join()
 {
     if( m_state == TaskState::Finished )
     {
@@ -102,12 +109,15 @@ void Task::join()
     LOG << "Task::wait: running Awaitable::wait()\n";
     m_awaitable.wait();
 }
-
+/**
+ * @brief helper function to start Task's runnable object and clean when it's finished
+ * @param task_ptr pointer to Task instance
+ */
 void Task::_run_wrapper( ::scontext::transfer_t transfer ) noexcept
 {
     try
     {
-        Task* current = Scheduler::get_current_task();
+        Task* current = static_cast<Task*>( Scheduler::get_current_task() );
         {
             LOG << "Task::_run_wrapper: started\n";
             Scheduler::post_jump_fcontext( {}, transfer, current );

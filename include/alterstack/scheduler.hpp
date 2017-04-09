@@ -27,8 +27,8 @@
 
 namespace alterstack
 {
-class Task;
-using RunningQueue = LockFreeQueue<Task>;
+class TaskBase;
+using RunningQueue = LockFreeQueue<TaskBase>;
 /**
  * @brief Tasks scheduler.
  *
@@ -47,31 +47,31 @@ private:
     Scheduler& operator=(Scheduler&&) = delete;
 
 public:
-    static bool schedule( Task* current_task = get_current_task() );
-    static void run_new_task( Task *task );
+    static bool schedule( TaskBase* current_task = get_current_task() );
+    static void run_new_task( TaskBase *task );
 
     static void post_jump_fcontext( Passkey<Task>
                                     , ::scontext::transfer_t transfer
-                                    , Task* current_task );
-    static void add_waiting_list_to_running( Passkey<Awaitable>, Task* task_list ) noexcept;
+                                    , TaskBase* current_task );
+    static void add_waiting_list_to_running( Passkey<Awaitable>, TaskBase* task_list ) noexcept;
 
 private:
     static Scheduler& instance();
 
-    bool do_schedule( Task* current_task );
-    void do_schedule_new_task(Task *task);
-    static void switch_to(Task* new_task );
+    bool do_schedule( TaskBase* current_task );
+    void do_schedule_new_task(TaskBase *task);
+    static void switch_to(TaskBase* new_task );
     static void post_jump_fcontext( ::scontext::transfer_t transfer
-                                    ,Task* current_task );
+                                    ,TaskBase* current_task );
 
-    Task* get_next_task( Task* current_task );
-    Task* get_running_from_queue() noexcept;
-    static Task* get_running_from_native();
-    static Task* get_native_task();
-    static Task* get_current_task();
+    TaskBase* get_next_task( TaskBase* current_task );
+    TaskBase* get_running_from_queue() noexcept;
+    static TaskBase* get_running_from_native();
+    static TaskBase* get_native_task();
+    static TaskBase* get_current_task();
 
-    static void add_waiting_list_to_running( Task* task_list ) noexcept;
-    static void enqueue_unbound_task(Task* task) noexcept;
+    static void add_waiting_list_to_running( TaskBase* task_list ) noexcept;
+    static void enqueue_unbound_task(TaskBase* task) noexcept;
     static void wait_while_context_is_null( std::atomic<Context>* context ) noexcept;
 
     BgRunner     bg_runner_;
@@ -79,6 +79,7 @@ private:
 
 private:
     friend class Task;
+    friend class TaskBase;
     friend class Awaitable;
     friend class BgRunner;
     friend class BgThread;
@@ -86,12 +87,12 @@ private:
 
 inline void Scheduler::post_jump_fcontext( Passkey<Task>
                                            , scontext::transfer_t transfer
-                                           , Task* current_task )
+                                           , TaskBase* current_task )
 {
     post_jump_fcontext( transfer, current_task );
 }
 
-inline void Scheduler::add_waiting_list_to_running( Passkey<Awaitable>, Task* task_list ) noexcept
+inline void Scheduler::add_waiting_list_to_running( Passkey<Awaitable>, TaskBase* task_list ) noexcept
 {
     add_waiting_list_to_running( task_list);
 }

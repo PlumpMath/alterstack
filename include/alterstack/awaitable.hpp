@@ -1,6 +1,6 @@
 /*
- * Copyright 2015-2016 Alexey Syrnikov <san@masterspline.net>
- * 
+ * Copyright 2015-2017 Alexey Syrnikov <san@masterspline.net>
+ *
  * This file is part of Alterstack.
  *
  * Alterstack is free software: you can redistribute it and/or modify
@@ -23,7 +23,7 @@
 
 namespace alterstack
 {
-class Task;
+class TaskBase;
 
 /**
  * @brief Provides core functionality for one Task to wait another.
@@ -83,7 +83,7 @@ public:
             :head{nullptr}
             ,is_finished{false}
         {}
-        Task* head;
+        TaskBase* head;
         bool  is_finished;
     };
 private:

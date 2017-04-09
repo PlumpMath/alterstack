@@ -46,16 +46,16 @@ Scheduler::Scheduler()
  * do nothing (continue running current Task).
  * @return true if at least one switch done
  */
-bool Scheduler::schedule(Task *current_task)
+bool Scheduler::schedule(TaskBase *current_task)
 {
     return instance().do_schedule( current_task );
 }
 
-bool Scheduler::do_schedule( Task *current_task )
+bool Scheduler::do_schedule( TaskBase *current_task )
 {
     LOG << "Scheduler::do_schedule( current_task )\n";
 
-    Task* next_task = nullptr;
+    TaskBase* next_task = nullptr;
     while( true )
     {
         next_task = get_next_task( current_task );
@@ -90,12 +90,12 @@ bool Scheduler::do_schedule( Task *current_task )
  * @brief switch OS thread to newly created Task, current task stay Running
  * @param task new task to run
  */
-void Scheduler::run_new_task( Task* task )
+void Scheduler::run_new_task( TaskBase* task )
 {
     instance().do_schedule_new_task(task);
 }
 
-void Scheduler::do_schedule_new_task( Task* task )
+void Scheduler::do_schedule_new_task( TaskBase* task )
 {
     switch_to(task);
 }
@@ -115,10 +115,10 @@ void Scheduler::do_schedule_new_task( Task* task )
  * 2. store old task in running queue if old still running
  * Last step done in post_switch_fixup() which is part of switch_to().
  */
-void Scheduler::switch_to( Task* new_task )
+void Scheduler::switch_to( TaskBase* new_task )
 {
     LOG << "Scheduler::switch_to\n";
-    Task* old_task = get_current_task();
+    TaskBase* old_task = get_current_task();
     LOG << "Scheduler::switch_to old_task -> new_task(m_context): "
         << old_task << " -> " << new_task << " (" << new_task->m_context << ")\n";
     TaskRunner::set_current_task( new_task );
@@ -142,12 +142,12 @@ void Scheduler::switch_to( Task* new_task )
  * @brief store old task in running queue, if it is not nullptr and is AlterNative
  * @param old_task task to store
  */
-void Scheduler::post_jump_fcontext( ::scontext::transfer_t transfer, Task* current_task )
+void Scheduler::post_jump_fcontext( ::scontext::transfer_t transfer, TaskBase* current_task )
 {
     LOG << "Scheduler::post_jump_fcontext\n";
 
     current_task->m_context = nullptr;
-    Task* prev_task = (Task*)transfer.data;
+    TaskBase* prev_task = (TaskBase*)transfer.data;
 //    if( prev_task->m_state.load( std::memory_order_relaxed ) == TaskState::Finished )
 //    {
 //        prev_task->m_state.store( TaskState::Clear, std::memory_order_release );
@@ -170,7 +170,7 @@ void Scheduler::post_jump_fcontext( ::scontext::transfer_t transfer, Task* curre
  * @brief get current Task*
  * @return pointer to current Task
  */
-Task* Scheduler::get_current_task()
+TaskBase* Scheduler::get_current_task()
 {
     if ( TaskRunner::current_task() == nullptr )
     {
@@ -182,7 +182,7 @@ Task* Scheduler::get_current_task()
  * @brief get Native Task pointer (create Task instance if does not exist)
  * @return Task* to Native Task instance
  */
-Task* Scheduler::get_native_task()
+TaskBase* Scheduler::get_native_task()
 {
     return TaskRunner::native_task();
 }
@@ -190,10 +190,10 @@ Task* Scheduler::get_native_task()
  * @brief get Task* from running queue
  * @return Task* or nullptr if queue is empty
  */
-Task* Scheduler::get_running_from_queue() noexcept
+TaskBase* Scheduler::get_running_from_queue() noexcept
 {
     bool have_more_tasks = false;
-    Task* task = running_queue_.get_item(have_more_tasks);
+    TaskBase* task = running_queue_.get_item(have_more_tasks);
     LOG << "Scheduler::get_next_from_queue: got task " << task << " from running queue\n";
     if( task != nullptr
             && have_more_tasks)
@@ -206,7 +206,7 @@ Task* Scheduler::get_running_from_queue() noexcept
  * @brief get Native Task* if it is running or nullptr
  * @return Native Task* or nullptr
  */
-Task* Scheduler::get_running_from_native()
+TaskBase* Scheduler::get_running_from_native()
 {
     if( TaskRunner::native_task()->m_state == TaskState::Running )
     {
@@ -220,7 +220,7 @@ Task* Scheduler::get_running_from_native()
  * @param task task to store
  * get_next_from_native() is threadsafe
  */
-void Scheduler::enqueue_unbound_task(Task *task) noexcept
+void Scheduler::enqueue_unbound_task(TaskBase *task) noexcept
 {
     assert(task != nullptr);
     auto& scheduler = instance();
@@ -255,9 +255,9 @@ void Scheduler::wait_while_context_is_null( std::atomic<Context>* context ) noex
  * @brief get next Task* to run using schedule algorithm of Scheduler
  * @return next running Task* or nullptr
  */
-Task *Scheduler::get_next_task( Task *current_task )
+TaskBase *Scheduler::get_next_task( TaskBase *current_task )
 {
-    Task* next_task = nullptr;
+    TaskBase* next_task = nullptr;
     if( current_task->is_thread_bound() ) // Common or BgRunner thread in it's own context
     {
         LOG << "Scheduler::next_task: Common thread code want to switch\n";
@@ -296,12 +296,12 @@ Task *Scheduler::get_next_task( Task *current_task )
  * task must NOT be in any queue (because of multithreading)
  * @param task pointer to running Task
  */
-void Scheduler::add_waiting_list_to_running( Task* task_list ) noexcept
+void Scheduler::add_waiting_list_to_running( TaskBase* task_list ) noexcept
 {
-    Task* null_context_tasks = nullptr;
+    TaskBase* null_context_tasks = nullptr;
     while( task_list != nullptr )
     {
-        Task* task = task_list;
+        TaskBase* task = task_list;
         task_list  = task_list->next();
         task->set_next( nullptr );
         task->m_state = TaskState::Running;
@@ -330,7 +330,7 @@ void Scheduler::add_waiting_list_to_running( Task* task_list ) noexcept
     // Add delayed unbound Task's to running queue
     while( null_context_tasks != nullptr )
     {
-        Task* task = null_context_tasks;
+        TaskBase* task = null_context_tasks;
         null_context_tasks = null_context_tasks->next();
         task->set_next( nullptr );
         while( task->m_context.load( std::memory_order_acquire ) == nullptr )

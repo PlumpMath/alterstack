@@ -54,58 +54,66 @@ class LockFreeQueue;
  *
  * Details see on Main Page in section @ref task_section.
  */
-class Task : private IntrusiveList<Task>
+class TaskBase : private IntrusiveList<TaskBase>
 {
+protected:
+    TaskBase( bool thread_bound );
 public:
-    Task( ::std::function<void()> runnable ); ///< will create unbound Task
     // FIXME: make this in factory
-    Task( Passkey<TaskRunner> ); ///< will create thread bound Task
-    ~Task();
+    TaskBase( Passkey<TaskRunner> ); ///< will create thread bound Task
+    virtual ~TaskBase();
 
-    Task() = delete;
-    Task(const Task&) = delete;
-    Task(Task&&)      = delete;
-    Task& operator=(const Task&) = delete;
-    Task& operator=(Task&&)      = delete;
+    TaskBase() = delete;
+    TaskBase(const TaskBase&) = delete;
+    TaskBase(TaskBase&&)      = delete;
+    TaskBase& operator=(const TaskBase&) = delete;
+    TaskBase& operator=(TaskBase&&)      = delete;
 
-    static void yield();
+
     void join();
 
     TaskState state( Passkey<Scheduler> ) const noexcept;
 
-private:
-    /**
-     * @brief helper function to start Task's runnable object and clean when it's finished
-     * @param task_ptr pointer to Task instance
-     */
-    [[noreturn]]
-    static void _run_wrapper( ::scontext::transfer_t transfer ) noexcept;
-    bool is_thread_bound() noexcept;
+protected:
+    bool is_thread_bound() const noexcept;
     TaskState state() const noexcept;
     void release();
 
     Awaitable              m_awaitable;
     std::atomic<Context>   m_context; // this always == nullptr, when some thread running this context
-    std::atomic<TaskState> m_state;
+    std::atomic<TaskState> m_state = { TaskState::Running };
+    const bool m_is_thread_bound;
 
-    std::unique_ptr<Stack> m_stack;
-    ::std::function<void()> m_runnable;
-    bool m_is_thread_bound;
 private:
     friend class Scheduler;
     friend class Awaitable;
-    friend class BoundBuffer<Task>;
-    friend class LockFreeStack<Task>;
-    friend LockFreeQueue<Task>;
+    friend class BoundBuffer<TaskBase>;
+    friend class LockFreeStack<TaskBase>;
+    friend LockFreeQueue<TaskBase>;
     friend class UnitTestAccessor;
     friend class BgRunner;
 };
+class Task final : public TaskBase
+{
+public:
+    Task( ::std::function<void()> runnable ); ///< will create unbound Task
+    ~Task();
 
-inline TaskState Task::state(Passkey<Scheduler>) const noexcept
+    static void yield();
+
+private:
+    [[noreturn]]
+    static void _run_wrapper( ::scontext::transfer_t transfer ) noexcept;
+
+    std::unique_ptr<Stack>  m_stack;
+    ::std::function<void()> m_runnable;
+};
+
+inline TaskState TaskBase::state(Passkey<Scheduler>) const noexcept
 {
     return state();
 }
-inline TaskState Task::state() const noexcept
+inline TaskState TaskBase::state() const noexcept
 {
     return m_state.load( std::memory_order_acquire );
 }
@@ -115,12 +123,12 @@ inline TaskState Task::state() const noexcept
  *
  * release() is threadsafe
  */
-inline void Task::release()
+inline void TaskBase::release()
 {
     m_awaitable.release();
 }
 
-inline bool Task::is_thread_bound() noexcept
+inline bool TaskBase::is_thread_bound() const noexcept
 {
     return m_is_thread_bound;
 }

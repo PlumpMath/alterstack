@@ -44,9 +44,9 @@ public:
     TaskRunner& operator=( TaskRunner&& )      = delete;
 
     static TaskRunner& current();
-    static Task* current_task();
-    static void  set_current_task( Task* new_task );
-    static Task* native_task();
+    static TaskBase* current_task();
+    static void  set_current_task( TaskBase* new_task );
+    static TaskBase* native_task();
     RunnerType   type();
 
     void make_bg_runner( Passkey<BgThread> );
@@ -56,8 +56,8 @@ private:
     TaskRunner();
     void set_type( RunnerType type );
 
-    Task  m_native_task;
-    Task* m_current_task = nullptr;
+    TaskBase  m_native_task;
+    TaskBase* m_current_task = nullptr;
     RunnerType m_runner_type;
 };
 
@@ -71,17 +71,17 @@ inline TaskRunner& TaskRunner::current()
     return runner_info;
 }
 
-inline Task* TaskRunner::current_task()
+inline TaskBase* TaskRunner::current_task()
 {
     return current().m_current_task;
 }
 
-inline void TaskRunner::set_current_task(Task *new_task)
+inline void TaskRunner::set_current_task(TaskBase *new_task)
 {
     current().m_current_task = new_task;
 }
 
-inline Task* TaskRunner::native_task()
+inline TaskBase* TaskRunner::native_task()
 {
     return &current().m_native_task;
 }
