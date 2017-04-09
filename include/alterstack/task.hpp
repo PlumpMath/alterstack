@@ -56,8 +56,9 @@ class LockFreeQueue;
  */
 class TaskBase : private IntrusiveList<TaskBase>
 {
-protected:
+private:
     TaskBase( bool is_thread_bound );
+
 public:
     virtual ~TaskBase();
 
@@ -90,6 +91,8 @@ private:
     friend LockFreeQueue<TaskBase>;
     friend class UnitTestAccessor;
     friend class BgRunner;
+    friend class Task;
+    friend class BoundTask;
 };
 class Task final : public TaskBase
 {
