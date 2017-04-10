@@ -25,7 +25,6 @@
 #include "alterstack/task.hpp"
 #include "alterstack/task_runner.hpp"
 #include "alterstack/os_utils.hpp"
-#include "alterstack/logger.hpp"
 
 namespace alterstack
 {
@@ -36,18 +35,14 @@ void BgThread::thread_function()
     AtomicReturnBoolGuard thread_stopped_guard(m_thread_stopped);
     TaskRunner::current().make_bg_runner({});
     os::set_thread_name();
-    LOG << "BgThread::thread_function: started\n";
 
     while( true )
     {
-        LOG << "BgThread::thread_function: will try to schedule something...\n";
         Scheduler::schedule();
         if( is_stop_requested() )
             return;
 
-        LOG << "BgThread::thread_function: waiting...\n";
         wait();
-        LOG << "BgThread::thread_function: waked up\n";
 
         if( is_stop_requested() )
             return;
@@ -58,7 +53,6 @@ void BgThread::ensure_thread_stopped()
 {
     while( !m_thread_stopped.load() )
     {
-        LOG << "BgThread::~BgThread(): waiting thread_function to stop\n";
         std::this_thread::sleep_for(::std::chrono::microseconds(1));
         wake_up();
     }
@@ -75,7 +69,6 @@ void BgThread::wait()
 BgThread::BgThread(Scheduler *scheduler)
     :scheduler_(scheduler)
 {
-    LOG << "BgThread::BgThread\n";
     m_stop_requested.store(false, ::std::memory_order_relaxed);
     m_thread_stopped.store(false, ::std::memory_order_release);
     m_os_thread = ::std::thread(&BgThread::thread_function, this);
@@ -85,7 +78,6 @@ BgThread::~BgThread()
 {
     stop_thread();
     m_os_thread.join();
-    LOG << "BgThread finished\n";
 }
 
 void BgThread::stop_thread()

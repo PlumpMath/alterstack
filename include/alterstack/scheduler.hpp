@@ -23,7 +23,6 @@
 #include "task_runner.hpp"
 #include "bg_runner.hpp"
 #include "passkey.hpp"
-#include "logger.hpp"
 
 namespace alterstack
 {

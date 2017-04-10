@@ -27,7 +27,6 @@
 #include "alterstack/context.hpp"
 #include "alterstack/bg_runner.hpp"
 #include "alterstack/task_runner.hpp"
-#include "alterstack/logger.hpp"
 
 namespace alterstack
 {
@@ -53,8 +52,6 @@ bool Scheduler::schedule(TaskBase *current_task)
 
 bool Scheduler::do_schedule( TaskBase *current_task )
 {
-    LOG << "Scheduler::do_schedule( current_task )\n";
-
     TaskBase* next_task = nullptr;
     while( true )
     {
@@ -67,7 +64,6 @@ bool Scheduler::do_schedule( TaskBase *current_task )
         {
             if( current_task->state({}) == TaskState::Running )
             {
-                LOG << "Scheduler::do_schedule: nowhere to switch, do nothing\n";
                 return false;
             }
             else // Only bound Common current_task will get here
@@ -75,8 +71,6 @@ bool Scheduler::do_schedule( TaskBase *current_task )
                 // FIXME: here I need Task::thread_wait() method to wait and exit on thread cancelled
                 if( current_task->m_state == TaskState::Waiting )
                 {
-                    LOG << "Scheduler::do_schedule: current Task is in Waiting state and "
-                           "nowhere to switch, waiting...\n";
                     TaskRunner::current().native_futex.wait();
                 }
 
@@ -117,10 +111,7 @@ void Scheduler::do_schedule_new_task( TaskBase* task )
  */
 void Scheduler::switch_to( TaskBase* new_task )
 {
-    LOG << "Scheduler::switch_to\n";
     TaskBase* old_task = get_current_task();
-    LOG << "Scheduler::switch_to old_task -> new_task(m_context): "
-        << old_task << " -> " << new_task << " (" << new_task->m_context << ")\n";
     TaskRunner::set_current_task( new_task );
     ::scontext::transfer_t transfer = ::scontext::jump_fcontext(
                 new_task->m_context
@@ -144,25 +135,13 @@ void Scheduler::switch_to( TaskBase* new_task )
  */
 void Scheduler::post_jump_fcontext( ::scontext::transfer_t transfer, TaskBase* current_task )
 {
-    LOG << "Scheduler::post_jump_fcontext\n";
-
     current_task->m_context = nullptr;
     TaskBase* prev_task = (TaskBase*)transfer.data;
-//    if( prev_task->m_state.load( std::memory_order_relaxed ) == TaskState::Finished )
-//    {
-//        prev_task->m_state.store( TaskState::Clear, std::memory_order_release );
-//        LOG << "Scheduler::post_jump_fcontext prev::m_state = Finished\n";
-//    }
-//    else
-//    {
-        prev_task->m_context = transfer.fctx;
-        LOG << "Scheduler::post_jump_fcontext saved prev_task m_context " << transfer.fctx << "\n";
-    //}
+    prev_task->m_context = transfer.fctx;
 
     if( !prev_task->is_thread_bound()
             && prev_task->m_state == TaskState::Running )
     {
-        LOG << "Scheduler::post_jump_fcontext: enqueueing old task\n";
         enqueue_unbound_task(prev_task);
     }
 }
@@ -194,7 +173,6 @@ TaskBase* Scheduler::get_running_from_queue() noexcept
 {
     bool have_more_tasks = false;
     TaskBase* task = running_queue_.get_item(have_more_tasks);
-    LOG << "Scheduler::get_next_from_queue: got task " << task << " from running queue\n";
     if( task != nullptr
             && have_more_tasks)
     {
@@ -210,7 +188,6 @@ TaskBase* Scheduler::get_running_from_native()
 {
     if( TaskRunner::native_task()->m_state == TaskState::Running )
     {
-        LOG << "Scheduler::_get_next_from_native: got native task\n";
         return TaskRunner::native_task();
     }
     return nullptr;
@@ -225,8 +202,6 @@ void Scheduler::enqueue_unbound_task(TaskBase *task) noexcept
     assert(task != nullptr);
     auto& scheduler = instance();
     scheduler.running_queue_.put_item(task);
-    LOG << "Scheduler::enqueue_alternative_task: task " << task
-        << " stored in running task queue\n";
     scheduler.bg_runner_.notify();
 }
 /**
@@ -242,14 +217,12 @@ void Scheduler::enqueue_unbound_task(TaskBase *task) noexcept
  */
 void Scheduler::wait_while_context_is_null( std::atomic<Context>* context ) noexcept
 {
-    LOG << "Scheduler::wait_while_context_is_null() waiting for " << context << "\n";
     if( context->load( std::memory_order_acquire ) == nullptr )
     {
         std::this_thread::sleep_for( std::chrono::microseconds(2) );
         while( context->load( std::memory_order_acquire ) == nullptr )
             std::this_thread::sleep_for( std::chrono::microseconds(10) );
     }
-    LOG << "Scheduler::wait_while_context_is_null() waiting finished for " << context << "\n";
 }
 /**
  * @brief get next Task* to run using schedule algorithm of Scheduler
@@ -260,7 +233,6 @@ TaskBase *Scheduler::get_next_task( TaskBase *current_task )
     TaskBase* next_task = nullptr;
     if( current_task->is_thread_bound() ) // Common or BgRunner thread in it's own context
     {
-        LOG << "Scheduler::next_task: Common thread code want to switch\n";
         next_task = get_running_from_queue();
     }
     else // unbound Task in Common thread or in BgRunner
@@ -268,14 +240,12 @@ TaskBase *Scheduler::get_next_task( TaskBase *current_task )
         if( TaskRunner::current().type() == RunnerType::CommonThread )
             // Common code in unbound context
         {
-            LOG << "Scheduler::next_task: in unbound context\n";
             next_task = get_running_from_native();
             if( next_task == nullptr )
                 next_task = get_running_from_queue();
         }
         else // BgRunner in unbound context
         {
-            LOG << "Scheduler::next_task: in BgRunner\n";
             next_task = get_running_from_queue();
         }
         auto current_state = current_task->state({});
@@ -283,7 +253,6 @@ TaskBase *Scheduler::get_next_task( TaskBase *current_task )
                 && ( current_state == TaskState::Finished
                      || current_state == TaskState::Waiting ) )
         {
-            LOG << "Scheduler::next_task: current_task is unbound in Finished state\n";
             next_task = get_native_task();
         }
     }
@@ -307,8 +276,6 @@ void Scheduler::add_waiting_list_to_running( TaskBase* task_list ) noexcept
         task->m_state = TaskState::Running;
         if( task->is_thread_bound() )
         {
-            LOG << "Scheduler::add_waiting_list_to_running: task " << task <<
-                   " is Thread bound, marking Ready and notifying\n";
             BoundTask* bound_task = static_cast<BoundTask*>(task);
             bound_task->notify();
         }
@@ -319,12 +286,8 @@ void Scheduler::add_waiting_list_to_running( TaskBase* task_list ) noexcept
               // Will delay enqueueing it in Running queue untill m_context != nullptr
                 task->set_next( null_context_tasks );
                 null_context_tasks = task;
-                LOG << "Scheduler::add_waiting_list_to_running: task " << task
-                    << " m_context == nullptr\n";
                 continue;
             }
-            LOG << "Scheduler::add_waiting_list_to_running: task " << task <<
-                   " is unbound Task, enqueueing in running queue\n";
             enqueue_unbound_task( task );
         }
     }

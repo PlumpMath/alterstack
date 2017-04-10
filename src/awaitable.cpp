@@ -21,7 +21,6 @@
 
 #include "alterstack/scheduler.hpp"
 #include "alterstack/task_runner.hpp"
-#include "alterstack/logger.hpp"
 
 #include <cassert>
 
@@ -31,15 +30,11 @@ namespace alterstack
 Awaitable::~Awaitable()
 {
     AwaitableData aw_data = ::std::atomic_load_explicit(&m_data,::std::memory_order_acquire);
-    LOG << "Awaitable::~Awaitable: Awaitable m_next " << aw_data.head << "\n";
-    LOG << "Awaitable::~Awaitable: Awaitable m_state " << aw_data.is_finished << "\n";
     if( aw_data.is_finished
             || aw_data.head == nullptr )
     {
-        LOG << "Awaitable::~Awaitable: Running awaitable finished or next == nullptr\n";
         return;
     }
-    LOG << "Awaitable::~Awaitable: have waiters, will wait";
     wait();
 }
 
@@ -47,12 +42,8 @@ bool Awaitable::insert_current_task_in_waitlist()
 {
     TaskBase* const current_task = Scheduler::get_current_task();
     AwaitableData aw_data = ::std::atomic_load_explicit(&m_data,::std::memory_order_acquire);
-    LOG << "Awaitable::wait: current Task* " << current_task << "\n";
-    LOG << "Awaitable::wait: Awaitable m_next " << aw_data.head << "\n";
-    LOG << "Awaitable::wait: Awaitable m_state " << (int)aw_data.is_finished << "\n";
     if( aw_data.is_finished )
     {
-        LOG << "Awaitable::wait: Awaitable Finished, all done\n";
         return false;
     }
     // locking not needed because external task can change state
@@ -78,15 +69,11 @@ bool Awaitable::insert_current_task_in_waitlist()
             // locking not needed because external task can change state
             // only from Waiting to Running at wakeup but current_task still not in wait queue
             current_task->m_state = TaskState::Running;
-            LOG << "Awaitable::wait: Awaitable Finished, all done\n";
             current_task->m_context = (void*)0x01;
             return false;
         }
         current_task->set_next( aw_data.head );
     }
-    LOG << "Awaitable::wait: current Task equeued\n";
-    LOG << "Awaitable::wait: current Task* m_next " << current_task->next() << "\n";
-    LOG << "Awaitable::wait: Awaitable m_next " << new_aw_data.head << "\n";
     return true;
 }
 
@@ -101,11 +88,8 @@ void Awaitable::wait()
 void Awaitable::release()
 {
     AwaitableData aw_data = ::std::atomic_load_explicit(&m_data,::std::memory_order_acquire);
-    LOG << "Awaitable::release: Awaitable m_next " << aw_data.head << "\n";
-    LOG << "Awaitable::release: Awaitable m_state " << (int)aw_data.is_finished << "\n";
     if( aw_data.is_finished )
     {
-        LOG << "Awaitable::release: Awaitable Finished, all done\n";
         return;
     }
     AwaitableData new_aw_data;
@@ -118,11 +102,9 @@ void Awaitable::release()
     {
         if( aw_data.is_finished )
         {
-            LOG << "Awaitable::release: Awaitable Finished, all done\n";
             return;
         }
     }
-    LOG << "Awaitable::release: post CAS Awaitable m_next " << aw_data.head << "\n";
 
     TaskBase* task_list = aw_data.head;
     Scheduler::add_waiting_list_to_running( {}, task_list );

@@ -1,6 +1,6 @@
 /*
- * Copyright 2015-2016 Alexey Syrnikov <san@masterspline.net>
- * 
+ * Copyright 2015-2017 Alexey Syrnikov <san@masterspline.net>
+ *
  * This file is part of Alterstack.
  *
  * Alterstack is free software: you can redistribute it and/or modify
@@ -22,7 +22,6 @@
 #include "alterstack/atomic_guard.hpp"
 #include "alterstack/scheduler.hpp"
 #include "alterstack/task.hpp"
-#include "alterstack/logger.hpp"
 
 namespace alterstack
 {
@@ -37,7 +36,6 @@ BgRunner::BgRunner(
         ,uint32_t min_spare
         ,uint32_t max_running )
 {
-    LOG << "BgRunner::BgRunner()\n";
     for(uint32_t i = 0; i < min_spare; ++i)
     {
         m_cpu_core_list.push_back(::std::unique_ptr<BgThread>(new BgThread(scheduler)));
@@ -50,7 +48,6 @@ BgRunner::~BgRunner()
     {
         core->request_stop();
     }
-    LOG << "BgRunner::~BgRunner()\n";
 }
 /**
  * @brief wake up all sleeping BgThread's

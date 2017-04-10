@@ -23,9 +23,9 @@
 
 #include <thread>
 #include <stdexcept>
+#include <iostream>
 
 #include "alterstack/scheduler.hpp"
-#include "alterstack/logger.hpp"
 
 namespace alterstack
 {
@@ -48,22 +48,17 @@ Task::Task( ::std::function<void()> runnable )
     ,m_stack{ new Stack() }
     ,m_runnable{ std::move(runnable) }
 {
-    LOG << "Task::Task\n";
     m_context = ctx::make_fcontext( m_stack->stack_top(), m_stack->size(), _run_wrapper);
-    LOG << "Task::Task: m_context " << m_context << "\n";
 
     Scheduler::run_new_task( this );
 }
 
 Task::~Task()
 {
-    LOG << "~Task(): unbound task " << this << "\n";
     release();
     while( m_state != TaskState::Finished
            || m_context == nullptr )
     {
-        LOG << "~Task() state " << static_cast<uint32_t>(m_state.load())
-            << " context " << m_context << "\n";
         yield();
         ::std::this_thread::yield();
     }
@@ -82,7 +77,6 @@ BoundTask::BoundTask(Passkey<TaskRunner> , TaskRunner* runner)
 
 BoundTask::~BoundTask()
 {
-    LOG << "~BoundTask: " << this << "\n";
     release();
     m_state = TaskState::Finished;  // unbound Task will be marked as Clear in _run_wrapper()
     return;
@@ -109,10 +103,8 @@ void TaskBase::join()
 {
     if( m_state == TaskState::Finished )
     {
-        LOG << "Task::join(): Task finished, nothing to wait\n";
         return;
     }
-    LOG << "Task::join(): running Awaitable::wait()\n";
     m_awaitable.wait();
 }
 /**
@@ -125,11 +117,9 @@ void Task::_run_wrapper( ::scontext::transfer_t transfer ) noexcept
     {
         Task* current = static_cast<Task*>( Scheduler::get_current_task() );
         {
-            LOG << "Task::_run_wrapper: started\n";
             Scheduler::post_jump_fcontext( {}, transfer, current );
 
             current->m_runnable();
-            LOG << "Task::_run_wrapper: runnable finished, cleaning Task\n";
             current->release();
             current->m_state.store( TaskState::Finished, std::memory_order_release );
         } // here all local objects NUST be destroyed because schedule() will never return
@@ -140,11 +130,11 @@ void Task::_run_wrapper( ::scontext::transfer_t transfer ) noexcept
     }
     catch(const std::exception& ex)
     {
-        LOG << "Task::_run_wrapper: Got exception:\n" << ex.what();
+        std::cerr << "_run_wrapper got exception " << ex.what() << "\n";
     }
     catch(...)
     {
-        LOG << "Task::_run_wrapper: Got strange exception\n";
+        std::cerr << "_run_wrapper got strange exception\n";
     }
     ::exit(EXIT_FAILURE);
 }
