@@ -309,7 +309,8 @@ void Scheduler::add_waiting_list_to_running( TaskBase* task_list ) noexcept
         {
             LOG << "Scheduler::add_waiting_list_to_running: task " << task <<
                    " is Thread bound, marking Ready and notifying\n";
-            TaskRunner::current().native_futex.notify();
+            BoundTask* bound_task = static_cast<BoundTask*>(task);
+            bound_task->notify();
         }
         else
         {

@@ -71,8 +71,9 @@ Task::~Task()
 /**
  * @brief constructor to create thread bound Task
  */
-BoundTask::BoundTask(Passkey<TaskRunner>)
+BoundTask::BoundTask(Passkey<TaskRunner> , TaskRunner* runner)
     :TaskBase{ true }
+    ,m_task_runner{ runner }
 {}
 
 /**
@@ -85,6 +86,11 @@ BoundTask::~BoundTask()
     release();
     m_state = TaskState::Finished;  // unbound Task will be marked as Clear in _run_wrapper()
     return;
+}
+
+void BoundTask::notify()
+{
+    m_task_runner->native_futex.notify();
 }
 /**
  * @brief yield current Task, schedule next (if avalable), current stay running
@@ -103,10 +109,10 @@ void TaskBase::join()
 {
     if( m_state == TaskState::Finished )
     {
-        LOG << "Task::wait: Task finished, nothing to wait\n";
+        LOG << "Task::join(): Task finished, nothing to wait\n";
         return;
     }
-    LOG << "Task::wait: running Awaitable::wait()\n";
+    LOG << "Task::join(): running Awaitable::wait()\n";
     m_awaitable.wait();
 }
 /**

@@ -60,6 +60,7 @@ int main()
     Task::yield();
     std::cout << "Returned to main\n";
     con_task2.join();
+    std::cout << "main finished\n";
     return 0;
 }
 

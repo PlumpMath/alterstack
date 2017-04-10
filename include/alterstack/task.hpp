@@ -113,8 +113,11 @@ private:
 class BoundTask final : public TaskBase
 {
 public:
-    BoundTask( Passkey<TaskRunner> ); ///< will create thread bound Task
+    BoundTask( Passkey<TaskRunner>, TaskRunner* runner ); ///< will create thread bound Task
     ~BoundTask();
+    void notify();
+private:
+    TaskRunner* m_task_runner;
 };
 inline TaskState TaskBase::state(Passkey<Scheduler>) const noexcept
 {

@@ -62,7 +62,7 @@ private:
 };
 
 inline TaskRunner::TaskRunner()
-    :m_native_task( Passkey<TaskRunner>{} )
+    :m_native_task( Passkey<TaskRunner>{}, this )
 {}
 
 inline TaskRunner& TaskRunner::current()
