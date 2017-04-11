@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Alexey Syrnikov <san@masterspline.net>
+ * Copyright 2015,2017 Alexey Syrnikov <san@masterspline.net>
  *
  * This file is part of Alterstack.
  *
@@ -26,7 +26,7 @@
 
 #include <iostream>
 
-#include "CpuUtils.hpp"
+#include "cpu_utils.hpp"
 
 int main()
 {
