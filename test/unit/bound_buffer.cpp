@@ -38,9 +38,6 @@ TEST_CASE("API check")
 {
     BoundBuffer<Item> buffer;
     bool have_more_items = false;
-    SECTION( "BoundBuffer fits in 64 bytes" ) {
-        REQUIRE( sizeof(BoundBuffer<Item>) <= 64 );
-    }
     SECTION( "empty BoundBuffer returns nullptr" )
     {
         for(int i = 0; i < 16; ++i )

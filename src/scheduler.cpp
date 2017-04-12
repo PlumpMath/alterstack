@@ -34,8 +34,8 @@ namespace alterstack
 namespace ctx = ::scontext;
 
 Scheduler::Scheduler()
-    :bg_runner_(this)
-    ,running_queue_()
+    :running_queue_()
+    ,bg_runner_( this )
 {}
 /**
  * @brief schedule next task on current OS thread
@@ -142,7 +142,7 @@ void Scheduler::post_jump_fcontext( ::scontext::transfer_t transfer, TaskBase* c
     if( !prev_task->is_thread_bound()
             && prev_task->m_state == TaskState::Running )
     {
-        enqueue_unbound_task(prev_task);
+        enqueue_unbound_task( static_cast<Task*>(prev_task) );
     }
 }
 /**
@@ -197,11 +197,11 @@ TaskBase* Scheduler::get_running_from_native()
  * @param task task to store
  * get_next_from_native() is threadsafe
  */
-void Scheduler::enqueue_unbound_task(TaskBase *task) noexcept
+void Scheduler::enqueue_unbound_task( Task *task ) noexcept
 {
     assert(task != nullptr);
     auto& scheduler = instance();
-    scheduler.running_queue_.put_item(task);
+    scheduler.running_queue_.put_item( task, static_cast<uint32_t>(task->priority()) );
     scheduler.bg_runner_.notify();
 }
 /**
@@ -288,7 +288,7 @@ void Scheduler::add_waiting_list_to_running( TaskBase* task_list ) noexcept
                 null_context_tasks = task;
                 continue;
             }
-            enqueue_unbound_task( task );
+            enqueue_unbound_task( static_cast<Task*>(task) );
         }
     }
     // Add delayed unbound Task's to running queue
@@ -301,7 +301,7 @@ void Scheduler::add_waiting_list_to_running( TaskBase* task_list ) noexcept
         {
             wait_while_context_is_null( &task->m_context );
         }
-        enqueue_unbound_task( task );
+        enqueue_unbound_task( static_cast<Task*>(task) );
     }
 }
 

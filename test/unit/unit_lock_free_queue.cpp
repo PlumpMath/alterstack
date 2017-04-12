@@ -36,6 +36,9 @@ TEST_CASE("API check")
 {
     ItemsQueue queue;
     bool have_more_tasks = false;
+    SECTION( "LockFreeQueue size is 64 bytes" ) {
+        REQUIRE( sizeof(ItemsQueue) == 64 );
+    }
     SECTION("LockFreeQueue aligned 64 bytes")
     {
         REQUIRE( (unsigned long long)(&queue) % 64 == 0);
@@ -50,7 +53,7 @@ TEST_CASE("API check")
     SECTION( "filled by one element returns it" )
     {
         Item item;
-        queue.put_item( &item );
+        queue.put_item( &item, 1 );
         REQUIRE( queue.get_item( have_more_tasks ) == &item );
         SECTION( "and after that returns nullptr" )
         {
@@ -63,7 +66,7 @@ TEST_CASE("API check")
     SECTION( "get_task returns single Task*" )
     {
         Item item;
-        queue.put_item( &item );
+        queue.put_item( &item, 1 );
         Item* got_item = queue.get_item( have_more_tasks );
         REQUIRE( got_item->next() == nullptr );
     }
@@ -73,7 +76,7 @@ TEST_CASE("API check")
     {
         for( auto& item: items )
         {
-            queue.put_item( &item );
+            queue.put_item( &item, 1 );
         }
         Item* item;
         std::set<Item*> item_set;
@@ -91,7 +94,7 @@ TEST_CASE("API check")
     SECTION( "get_item() will not set have_more flag with one Item*" )
     {
         Item item;
-        queue.put_item( &item );
+        queue.put_item( &item, 1 );
         have_more_tasks = false;
         Item* got_item = queue.get_item( have_more_tasks );
         REQUIRE( have_more_tasks == false );
@@ -99,9 +102,9 @@ TEST_CASE("API check")
     SECTION( "get_task will set have_more flag with two Item*s" )
     {
         Item task1;
-        queue.put_item( &task1 );
+        queue.put_item( &task1, 1 );
         Item task2;
-        queue.put_item( &task2 );
+        queue.put_item( &task2, 1 );
         have_more_tasks = false;
 
         queue.get_item( have_more_tasks );

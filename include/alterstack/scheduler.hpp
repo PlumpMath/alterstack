@@ -70,11 +70,11 @@ private:
     static TaskBase* get_current_task();
 
     static void add_waiting_list_to_running( TaskBase* task_list ) noexcept;
-    static void enqueue_unbound_task(TaskBase* task) noexcept;
+    static void enqueue_unbound_task( Task* task ) noexcept;
     static void wait_while_context_is_null( std::atomic<Context>* context ) noexcept;
 
-    BgRunner     bg_runner_;
     RunningQueue running_queue_;
+    BgRunner     bg_runner_;
 
 private:
     friend class TaskBase;

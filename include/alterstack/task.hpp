@@ -94,21 +94,43 @@ private:
     friend class Task;
     friend class BoundTask;
 };
+
 class Task final : public TaskBase
 {
 public:
+    enum class Priority : uint32_t
+    {
+        High = 0,
+        Normal = 1,
+        Low = 2,
+        MaxNum = Low,
+    };
+
     Task( ::std::function<void()> runnable ); ///< will create unbound Task
     ~Task();
 
     static void yield();
+    Priority priority();
+    void     set_priority( Priority prio );
 
 private:
     [[noreturn]]
     static void _run_wrapper( ::scontext::transfer_t transfer ) noexcept;
 
+    Priority                m_priority = { Priority::Normal }; ///< scheduling priority
     std::unique_ptr<Stack>  m_stack;
     ::std::function<void()> m_runnable;
 };
+
+inline Task::Priority Task::priority()
+{
+    return m_priority;
+}
+
+inline void Task::set_priority( Task::Priority prio )
+{
+    m_priority = prio;
+}
 
 class BoundTask final : public TaskBase
 {

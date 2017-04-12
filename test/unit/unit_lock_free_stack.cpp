@@ -39,7 +39,7 @@ TEST_CASE("API check")
     {
         for(int i = 0; i < 16; ++i )
         {
-            REQUIRE( stack.pop_all() == nullptr );
+            REQUIRE( stack.pop_list() == nullptr );
         }
     }
     SECTION( "first push returns true, next false, push after pop_all returns true" )
@@ -52,7 +52,7 @@ TEST_CASE("API check")
             res = stack.push(&items[i]);
             REQUIRE( res == false );
         }
-        stack.pop_all();
+        stack.pop_list();
         items.clear();
         items.resize(100);
         res = stack.push(&items[0]);
@@ -67,14 +67,14 @@ TEST_CASE("API check")
     {
         Item item;
         stack.push( &item );
-        Item* got_item = stack.pop_all();
+        Item* got_item = stack.pop_list();
         REQUIRE( got_item == &item );
         REQUIRE( got_item->next() == nullptr );
         SECTION( "and after that returns nullptr" )
         {
             for(int i = 0; i < 100; ++i )
             {
-                REQUIRE( stack.pop_all() == nullptr );
+                REQUIRE( stack.pop_list() == nullptr );
             }
         }
     }
@@ -86,7 +86,7 @@ TEST_CASE("API check")
         {
             stack.push( &item );
         }
-        Item* items_list = stack.pop_all();
+        Item* items_list = stack.pop_list();
         std::set<Item*> items_set;
         while( items_list != nullptr )
         {

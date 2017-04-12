@@ -35,7 +35,7 @@ namespace alterstack
  * void put_item(T* item) noexcept; enqueue single T* item in queue
  */
 template<typename T>
-class LockFreeQueue
+class alignas(64) LockFreeQueue
 {
 public:
     LockFreeQueue() = default;
@@ -46,11 +46,12 @@ public:
     LockFreeQueue& operator=( LockFreeQueue&& )      = delete;
 
     T*   get_item( bool &have_more_items ) noexcept;
-    void put_item( T* item ) noexcept;
+    void put_item( T* item, uint32_t prio ) noexcept;
 
 private:
+    static constexpr uint32_t QUEUE_COUNT = 3;
     BoundBuffer<T>   m_item_buffer;
-    LockFreeStack<T> m_item_stack;
+    LockFreeStack<T> m_prio_queue[ QUEUE_COUNT ]; // to fit LockFreeQueue in 64 bytes cache line
 };
 
 /**
@@ -69,7 +70,13 @@ T* LockFreeQueue<T>::get_item( bool& have_more_items ) noexcept
     {
         return item;
     }
-    T* items_list = m_item_stack.pop_all();
+    T* items_list = nullptr;
+    for( uint32_t i = 0; i < QUEUE_COUNT; ++i )
+    {
+        items_list = m_prio_queue[ i ].pop_list();
+        if( items_list != nullptr )
+            break;
+    }
     if( items_list != nullptr )
     {
         item = items_list;
@@ -90,9 +97,11 @@ T* LockFreeQueue<T>::get_item( bool& have_more_items ) noexcept
  * @param item T* to store
  */
 template<typename T>
-void LockFreeQueue<T>::put_item( T* item ) noexcept
+void LockFreeQueue<T>::put_item( T* item, uint32_t prio ) noexcept
 {
-    m_item_stack.push( item );
+    if( prio >= QUEUE_COUNT )
+        prio = QUEUE_COUNT - 1;
+    m_prio_queue[ prio ].push( item );
 }
 
 }

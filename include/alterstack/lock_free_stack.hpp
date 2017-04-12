@@ -47,7 +47,7 @@ public:
     LockFreeStack& operator=( LockFreeStack&& )      = delete;
 
     bool push( T* item ) noexcept;
-    T* pop_all() noexcept;
+    T*   pop_list() noexcept;
 
 private:
     std::atomic<T*> m_head;
@@ -85,7 +85,7 @@ bool LockFreeStack<T>::push( T *item ) noexcept
  * @return T* items list
  */
 template<typename T>
-T* LockFreeStack<T>::pop_all() noexcept
+T* LockFreeStack<T>::pop_list() noexcept
 {
     return m_head.exchange( nullptr, std::memory_order_acquire );
 }

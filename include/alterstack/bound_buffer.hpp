@@ -40,7 +40,7 @@ namespace alterstack
  * in buffer
  */
 template<typename T>
-class alignas(64) BoundBuffer
+class BoundBuffer
 {
 public:
     BoundBuffer() noexcept;
@@ -93,7 +93,7 @@ public:
      */
     void store_tail( T* item_list) noexcept;
 
-    static constexpr uint32_t BUFFER_SIZE = 7; // to fit in 64 bytes cache line
+    static constexpr uint32_t BUFFER_SIZE = 4; // to fit LockFreeQueue in 64 bytes cache line
     std::atomic<uint32_t> m_get_position;
     std::atomic<uint32_t> m_put_position;
     std::atomic<T*>       m_buffer[BUFFER_SIZE];

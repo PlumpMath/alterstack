@@ -40,7 +40,7 @@ std::vector<Item> items(ITEMS_COUNT);
 
 void thread_function()
 {
-    for(int i = 0; i < 10000; ++i)
+    for( int i = 0; i < 10000; ++i )
     {
         Item* item;
         std::set<Item*> item_set;
@@ -56,17 +56,9 @@ void thread_function()
             }
             item_set.insert( item );
         }
-//        for(auto& task: tasks)
-//        {
-//            if( task_set.find(&task) == task_set.end() )
-//            {
-//                std::cerr << "Got task " << &task << " not from initial array\n";
-//                exit(1);
-//            }
-//        }
         for( auto& item: item_set)
         {
-            queue.put_item( item );
+            queue.put_item( item, uint32_t(i) );
         }
         item_set.clear();
     }
@@ -80,7 +72,7 @@ int main()
     }
     for( auto& item: items )
     {
-        queue.put_item( &item );
+        queue.put_item( &item, 1 );
     }
 
     std::thread t1(thread_function);
