@@ -23,7 +23,8 @@ namespace alterstack
 {
 
 template <typename T>
-class Passkey {
+class Passkey
+{
 private:
     friend T;
     Passkey() noexcept {}
