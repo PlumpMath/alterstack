@@ -50,7 +50,8 @@ public:
 
 private:
     static constexpr uint32_t QUEUE_COUNT = 3;
-    BoundBuffer<T>   m_item_buffer;
+    BoundBuffer<T>   m_item_buffer; // Items with prio == 0 will go here,
+                                    // others [1..QUEUE_COUNT] will go to m_prio_queue
     LockFreeStack<T> m_prio_queue[ QUEUE_COUNT ]; // to fit LockFreeQueue in 64 bytes cache line
 };
 
@@ -99,9 +100,16 @@ T* LockFreeQueue<T>::get_item( bool& have_more_items ) noexcept
 template<typename T>
 void LockFreeQueue<T>::put_item( T* item, uint32_t prio ) noexcept
 {
+    if( prio == 0 )
+    {
+        m_item_buffer.put_items_list( item );
+        return;
+    }
     if( prio >= QUEUE_COUNT )
-        prio = QUEUE_COUNT - 1;
-    m_prio_queue[ prio ].push( item );
+    {
+        prio = QUEUE_COUNT;
+    }
+    m_prio_queue[ prio - 1 ].push( item );
 }
 
 }

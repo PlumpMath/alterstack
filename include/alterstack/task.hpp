@@ -103,7 +103,8 @@ public:
         High = 0,
         Normal = 1,
         Low = 2,
-        MaxNum = Low,
+        Batch = 3,
+        MaxNum = Batch
     };
 
     Task( ::std::function<void()> runnable ); ///< will create unbound Task

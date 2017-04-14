@@ -144,7 +144,7 @@ T* BoundBuffer<T>::get_item( bool& have_more ) noexcept
 template<typename T>
 bool BoundBuffer<T>::store_in_empty_slot(T* item) noexcept
 {
-    uint32_t index = m_put_position.load(std::memory_order_relaxed);
+    uint32_t index = m_put_position.load( std::memory_order_relaxed );
     uint32_t i = 0;
     while( i < BUFFER_SIZE )
     {
@@ -207,9 +207,9 @@ T* BoundBuffer<T>::find_last_item_in_list( T* items_list )
 template<typename T>
 void BoundBuffer<T>::store_in_occupied_slot( T* items_list ) noexcept
 {
-    uint32_t index = m_put_position.fetch_add(1, std::memory_order_relaxed);
+    uint32_t index = m_put_position.fetch_add( 1, std::memory_order_relaxed );
     T* old_list = m_buffer[index % BUFFER_SIZE].exchange(
-                items_list, std::memory_order_acq_rel);
+                items_list, std::memory_order_acq_rel );
     if( old_list == nullptr )
     {
         return;
@@ -229,10 +229,10 @@ void BoundBuffer<T>::store_in_occupied_slot( T* items_list ) noexcept
 template<typename T>
 void BoundBuffer<T>::put_items_list( T* items_list ) noexcept
 {
-    if( store_in_empty_slot(items_list) )
+    if( store_in_empty_slot( items_list ) )
     {
         return;
     }
-    store_in_occupied_slot(items_list);
+    store_in_occupied_slot( items_list );
 }
 }
