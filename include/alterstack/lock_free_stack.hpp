@@ -33,7 +33,7 @@ namespace alterstack
  *
  * push(T*) will store one T* item in stack
  *
- * pop_all() will return all stored T* and clean stack atomically
+ * pop_list() will return all stored T* and clean stack atomically
  */
 template<typename T>
 class LockFreeStack

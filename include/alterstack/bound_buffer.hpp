@@ -49,48 +49,15 @@ public:
     BoundBuffer( BoundBuffer&& )      = delete;
     BoundBuffer& operator=( const BoundBuffer& ) = delete;
     BoundBuffer& operator=( BoundBuffer&& )      = delete;
-    /**
-     * @brief get T* or nullptr from BoundBuffer
-     *
-     * get_item(bool &have_more) also set have_more flag to true if there is more
-     * items in buffer (rare false negative possible, when there are more items,
-     * but have_more will be false).
-     * @param have_more will be set to true, if there is more T* items (not always)
-     * @return single T* (not list) or nullptr if no items in buffer
-     */
-    T* get_item( bool& have_more ) noexcept;
-    /**
-     * @brief store item in buffer slot (empty or nonempty)
-     *
-     * put_item_list(T* task) will store item in single slot, it will not
-     * distribute it in different buffer slots even if task is list (this
-     * will done in get_item() stage).
-     * @param item T* (single or list) to store
-     */
+
+    T*   get_item( bool& have_more ) noexcept;
     void put_items_list( T* item ) noexcept;
-    /**
-     * @brief find last item in intrusive list (i.e. next() == nullptr)
-     * @param item_list T* intrusive list
-     * @return item T* whose next() == nullptr
-     */
+
+private:
     static T* find_last_item_in_list(T* items_list);
 
-    private:
-    /**
-     * @brief store T* (single or list) in any empty slot in buffer
-     * @param item T* to store
-     * @return true if empty slot found and T* stored there
-     */
     bool store_in_empty_slot( T *item ) noexcept;
-    /**
-     * @brief store item T* (single or list) in slot poined by m_put_position
-     * @param item_list T* list to store
-     */
     void store_in_occupied_slot( T* items_list ) noexcept;
-    /**
-     * @brief distribute item list T* in empty slots first, and rest as list in occupied
-     * @param item_list list to store
-     */
     void store_tail( T* item_list) noexcept;
 
     static constexpr uint32_t BUFFER_SIZE = 4; // to fit LockFreeQueue in 64 bytes cache line
@@ -105,6 +72,16 @@ BoundBuffer<T>::BoundBuffer() noexcept
     m_get_position.store(0, std::memory_order_relaxed);
     m_put_position.store(0, std::memory_order_relaxed);
 }
+
+/**
+ * @brief get T* or nullptr from BoundBuffer
+ *
+ * get_item(bool &have_more) also set have_more flag to true if there is more
+ * items in buffer (rare false negative possible, when there are more items,
+ * but have_more will be false).
+ * @param have_more will be set to true, if there is more T* items (not always)
+ * @return single T* (not list) or nullptr if no items in buffer
+ */
 template<typename T>
 T* BoundBuffer<T>::get_item( bool& have_more ) noexcept
 {
@@ -141,8 +118,13 @@ T* BoundBuffer<T>::get_item( bool& have_more ) noexcept
     return item;
 }
 
+/**
+ * @brief store T* (single or list) in any empty slot in buffer
+ * @param item T* to store
+ * @return true if empty slot found and T* stored there
+ */
 template<typename T>
-bool BoundBuffer<T>::store_in_empty_slot(T* item) noexcept
+bool BoundBuffer<T>::store_in_empty_slot( T* item ) noexcept
 {
     uint32_t index = m_put_position.load( std::memory_order_relaxed );
     uint32_t i = 0;
@@ -171,6 +153,10 @@ bool BoundBuffer<T>::store_in_empty_slot(T* item) noexcept
     return false;
 }
 
+/**
+ * @brief distribute item list T* in empty slots first, and rest as list in occupied
+ * @param item_list list to store
+ */
 template<typename T>
 void BoundBuffer<T>::store_tail(T* items_list) noexcept
 {
@@ -193,6 +179,11 @@ void BoundBuffer<T>::store_tail(T* items_list) noexcept
     store_in_occupied_slot( items_list );
 }
 
+/**
+ * @brief find last item in intrusive list (i.e. next() == nullptr)
+ * @param item_list T* intrusive list
+ * @return item T* whose next() == nullptr
+ */
 template<typename T>
 T* BoundBuffer<T>::find_last_item_in_list( T* items_list )
 {
@@ -204,6 +195,10 @@ T* BoundBuffer<T>::find_last_item_in_list( T* items_list )
     return last_item;
 }
 
+/**
+ * @brief store item T* (single or list) in slot poined by m_put_position
+ * @param item_list T* list to store
+ */
 template<typename T>
 void BoundBuffer<T>::store_in_occupied_slot( T* items_list ) noexcept
 {
@@ -226,6 +221,14 @@ void BoundBuffer<T>::store_in_occupied_slot( T* items_list ) noexcept
     }
 }
 
+/**
+ * @brief store item in buffer slot (empty or nonempty)
+ *
+ * put_item_list(T* task) will store item in single slot, it will not
+ * distribute it in different buffer slots even if task is list (this
+ * will done in get_item() stage).
+ * @param item T* (single or list) to store
+ */
 template<typename T>
 void BoundBuffer<T>::put_items_list( T* items_list ) noexcept
 {
