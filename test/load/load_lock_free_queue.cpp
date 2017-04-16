@@ -58,7 +58,7 @@ void thread_function()
         }
         for( auto& item: item_set)
         {
-            queue.put_item( item, uint32_t(i) );
+            queue.put_item( item, uint32_t(i) % 4 );
         }
         item_set.clear();
     }

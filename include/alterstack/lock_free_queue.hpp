@@ -102,7 +102,7 @@ void LockFreeQueue<T>::put_item( T* item, uint32_t prio ) noexcept
 {
     if( prio == 0 )
     {
-        m_item_buffer.put_items_list( item );
+        m_item_buffer.put_priority_item( item );
         return;
     }
     if( prio >= QUEUE_COUNT )

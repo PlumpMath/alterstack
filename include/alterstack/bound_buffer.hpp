@@ -26,7 +26,7 @@
 namespace alterstack
 {
 /**
- * @brief Almost fifo lockfree buffer to hold Task* in RunningTaskQueue
+ * @brief round bounded semi fifo lockfree buffer to hold Task* in RunningTaskQueue
  *
  * TaskBuffer is fifo-like bound lockfree buffer which hold Task* in RunningTaskQueue.
  * Task* order can change especially if stored Task* count exceeds buffer slots.
@@ -38,6 +38,8 @@ namespace alterstack
  *
  * void put_task(Task* task) noexcept; always put Task* (single or list)
  * in buffer
+ *
+ * void put_priority_item( T* item ) noexcept - store priority item in get position
  */
 template<typename T>
 class BoundBuffer
@@ -52,6 +54,7 @@ public:
 
     T*   get_item( bool& have_more ) noexcept;
     void put_items_list( T* item ) noexcept;
+    void put_priority_item( T* item ) noexcept;
 
 private:
     static T* find_last_item_in_list(T* items_list);
@@ -238,4 +241,24 @@ void BoundBuffer<T>::put_items_list( T* items_list ) noexcept
     }
     store_in_occupied_slot( items_list );
 }
+
+/**
+ * @brief store priority single item in get position
+ * @param item T* item to store
+ */
+template<typename T>
+void BoundBuffer<T>::put_priority_item( T* item ) noexcept
+{
+    uint32_t index = m_get_position.load( std::memory_order_relaxed );
+    T* next_item = m_buffer[ index % BUFFER_SIZE ].load( std::memory_order_relaxed );
+    item->set_next( next_item );
+    while( !m_buffer[ index % BUFFER_SIZE ].compare_exchange_weak(
+               next_item
+               ,item
+               ,std::memory_order_release, std::memory_order_relaxed ) )
+    {
+        item->set_next( next_item );
+    }
+}
+
 }
