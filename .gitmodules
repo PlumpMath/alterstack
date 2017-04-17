@@ -4,3 +4,6 @@
 [submodule "ext/cpu_utils"]
 	path = ext/cpu_utils
 	url = https://github.com/masterspline/cpu_utils.git
+[submodule "ext/hwloc"]
+	path = ext/hwloc
+	url = https://github.com/masterspline/hwloc.git
